@@ -5,26 +5,13 @@ import AuthForm from './Components/AuthForm/AuthForm';
 import InstructorDashboard from './Components/InstructorDashboard/InstructorDashboard';
 import './App.css';
 
-// maintains auth-state
-const authCentralState = {
-  isAuthenticated : false,
-  signin(callback){
-    this.isAuthenticated = true;
-    setTimeout(callback, 3000);
-  },
-  signout(callback) {
-    this.isAuthenticated = false;
-    setTimeout(callback, 3000);
-  }
-};
-
 // public route - only available to non-authenticated users
 const PublicRoute = ({component : Component, ...rest}) => {
   return (
   <Route {...rest} render={
     function(props){
       let merged = {...props, ...rest};
-      return ( !authCentralState.isAuthenticated ? 
+      return ( localStorage.getItem('_auth') == null ? 
         <Component {...merged} /> : 
         <Redirect to={{pathname: '/dashboard', state: {from: props.location}}} />
       );
@@ -32,14 +19,19 @@ const PublicRoute = ({component : Component, ...rest}) => {
   }/>);
 };
 
-// private route - only available to authenticated users
-const PrivateRoute = ({component : Component, ...rest}) => (
-  <Route {...rest} render={(props) => (
-    authCentralState.isAuthenticated ? 
-      <Component {...props} /> : 
-      <Redirect to={{pathname: '/login', state: {from: props.location}}} />
-  )}/>
-);
+// private route - only available to non-authenticated users
+const PrivateRoute = ({component : Component, ...rest}) => {
+  return (
+  <Route {...rest} render={
+    function(props){
+      let merged = {...props, ...rest};
+      return ( localStorage.getItem('_auth') != null ? 
+        <Component {...merged} /> : 
+        <Redirect to={{pathname: '/login', state: {from: props.location}}} />
+      );
+    }
+  }/>);
+};
 
 function App() {
   return (
@@ -49,7 +41,7 @@ function App() {
           <PublicRoute exact path="/" component={Homepage} />
           <PublicRoute exact path="/login" component={AuthForm} register={false}/>
           <PublicRoute exact path="/register" component={AuthForm} register={true}/>
-          <PublicRoute exact path="/dashboard" component={InstructorDashboard} />
+          <PrivateRoute exact path="/dashboard" component={InstructorDashboard} />
         </Switch>
       </BrowserRouter>
     </div>

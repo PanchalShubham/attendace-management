@@ -13,8 +13,7 @@ import Container from '@material-ui/core/Container';
 import MenuIcon from '@material-ui/icons/Menu';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp'
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import ListSubheader from '@material-ui/core/ListSubheader';
-import AssignmentIcon from '@material-ui/icons/Assignment';
+import {secondaryListItems } from './listItems';
 import Alert from '@material-ui/lab/Alert';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -136,11 +135,12 @@ export default function Dashboard() {
   const [currentItem, setCurrentItem] = useState(null);
   const [user, setUser] = useState(null);
   const [redirect, setRedirect] = useState(null);
-  const [snack, setSnack] = useState({visible: false, snackType: 'success', snackMessage: ''});
-  const [classVisible, setClassVisible] = useState(false);
+
+
 
 
   // snack-management
+  const [snack, setSnack] = useState({visible: false, snackType: 'success', snackMessage: ''});
   const showSnackBar = function(type, message) {
     setSnack({visible: true, snackType: type, snackMessage: message});
   }
@@ -198,7 +198,7 @@ export default function Dashboard() {
             <MenuIcon />
           </IconButton>
           <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-            {user != null ? user.username + "(" + user.role + ")" : "<username>"}
+            {user != null ? user.username : "<username>"}
           </Typography>
           <IconButton color="inherit" onClick={onLogout}>
             <ExitToAppIcon />
@@ -223,15 +223,15 @@ export default function Dashboard() {
               <ListItemIcon>
                 <AddBoxIcon />
               </ListItemIcon>
-              <ListItemText primary={user != null ? (user.role === 'teacher' ? "New classroom" : "Join classroom") : ""}/>
+              <ListItemText primary="Join Classroom" />
             </ListItem>
-            <ListItem button onClick={onViewClassroom} disabled={!classVisible}>
+            <ListItem button onClick={onViewClassroom}>
               <ListItemIcon>
                 <DeleteIcon />
               </ListItemIcon>
               <ListItemText primary="Delete Classroom" />
             </ListItem>
-            <ListItem button disabled={!classVisible}>
+            <ListItem button>
               <ListItemIcon>
                 <GetAppIcon />
               </ListItemIcon>
@@ -246,17 +246,7 @@ export default function Dashboard() {
           </div>          
         </List>
         <Divider />
-        <List>
-          <div>
-            <ListSubheader inset>Your classrooms</ListSubheader>
-            <ListItem button>
-              <ListItemIcon>
-                <AssignmentIcon />
-              </ListItemIcon>
-              <ListItemText primary="Current month" />
-            </ListItem>
-          </div>
-        </List>
+        <List>{secondaryListItems}</List>
       </Drawer>
 
 

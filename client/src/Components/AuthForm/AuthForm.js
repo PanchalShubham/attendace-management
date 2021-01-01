@@ -14,11 +14,14 @@ import FormControl from '@material-ui/core/FormControl';
 import { makeStyles } from '@material-ui/core/styles';
 import BrandIcon from '../../resources/images/brand.png';
 import LoadingOverlay from 'react-loading-overlay';
-
 import Alert from '@material-ui/lab/Alert';
 import IconButton from '@material-ui/core/IconButton';
 import Collapse from '@material-ui/core/Collapse';
 import CloseIcon from '@material-ui/icons/Close';
+
+
+import {Redirect} from 'react-router-dom';
+import {registerUser, loginUser, encrypt} from '../../DAO/DataAccessObject';
 
 // styles
 const useStyles = makeStyles((theme) => ({
@@ -51,10 +54,10 @@ export default function AuthForm(props) {
   const {register} = props;    
   const classes = useStyles();
   const [role, setRole] = useState('student');
-  const [loader, setLoader] = useState({loading: true, text : ''});
-  const [open, setOpen] = useState(true);
+  const [loader, setLoader] = useState({loading: false, text : ''});
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [redirect, setRedirect] = useState(null);
 
   
   // returns true if email is valid; false otherwise
@@ -68,39 +71,70 @@ export default function AuthForm(props) {
   const onFormSubmit = function(event){
     // read properties
     event.preventDefault();
+    if (loader.loading) return;
+
+    // process user's input
     let username = null;
     if (register) username = String(document.getElementById('username').value).toLowerCase().trim();
     let email = String(document.getElementById('email').value).toLowerCase().trim();
     let password = String(document.getElementById('password').value).toLowerCase().trim();
 
     // validate fields
-    if (username && username === '') {
+    if (username != null && username === '') {
         setError('Please provide a valid username!');
-        setOpen(true);
         return;
     }
     if(!isValidEmail(email)) {
         setError('Please provide a valid email!');
-        setOpen(true);
         return;
     }
     if (password === '') {
         setError('Please provide a valid password!');
-        setOpen(true);
         return;
     }
     if (role !== 'student' && role !== 'teacher') {
         setError('Please select your role!');
-        setOpen(true);
         return;
     }
 
     // make server request
-    if (register) setLoader({loading: true, text: `Please wait! I'm setting up your account`});
-    else          setLoader({loading: true, text: `Please wait! I'm validating your credentials.`});
+    if (register) {
+        // register user
+        setLoader({loading: true, text: `Please wait! I'm setting up your account`});        
+        let user = {username, email, password, role};
+        registerUser(user).then(response => {
+            let data = response.data;
+            if (data.error) setError(data.error);
+            else            setSuccess(`Your registration was successful!`);
+        }).catch(err => {
+            setError(err);
+        }).finally(()=>{
+            setLoader({loading: false, text: ``});
+        });
+    } else {
+        // login user
+        setLoader({loading: true, text: `Please wait! I'm validating your credentials.`});
+        let user = {email, password, role};
+        loginUser(user).then(response => {
+            let data = response.data;
+            if (data.error) {
+                setError(data.error);
+            } else {
+                localStorage.setItem('_auth', encrypt(data.user));
+                setSuccess(`You are successfully logged in!`);
+                setRedirect(<Redirect to="/dashboard" />)
+            }
+        }).catch(err => {
+            setError(err);
+        }).finally(()=>{
+            setLoader({loading: false, text: ``});
+        });
+    }
+
+
   };
 
-  return (
+  return redirect || (
     <div id="authForm">
     <LoadingOverlay active={loader.loading} spinner text={loader.text}>
         <Container component="main" maxWidth="xs">
@@ -112,16 +146,16 @@ export default function AuthForm(props) {
             </Typography>
             <form className={classes.form} noValidate onSubmit={onFormSubmit}>
                 {/* alerts */}
-                <Collapse in={open}>
+                <Collapse in={Boolean(success || error)}>
                     {success && <Alert severity="success" action={
                         <IconButton aria-label="close" color="inherit" size="small"
-                        onClick={() => { setSuccess(null); setOpen(false); }}>
+                        onClick={() => { setSuccess(null); setError(null);}}>
                             <CloseIcon fontSize="inherit" />
                         </IconButton>
                     }> {success}</Alert>}
                     {error && <Alert severity="error" action={
                         <IconButton aria-label="close" color="inherit" size="small"
-                        onClick={() => { setError(null); setOpen(false); }}>
+                        onClick={() => { setSuccess(null); setError(null);}}>
                             <CloseIcon fontSize="inherit" />
                         </IconButton>
                     }> {error}</Alert>}
