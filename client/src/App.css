@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville&display=swap');
-*{font-family: 'Libre Baskerville', serif;}
+*{font-family: 'Libre Baskerville', serif !important;}
 html, body{
     margin: 0;
     padding: 0;
@@ -20,4 +20,14 @@ body, ul{
 
 ._loading_overlay_wrapper{
     height: 100vh !important;
+}
+table{
+    white-space: nowrap !important;
+}
+input.mousetrap{
+    height: 100%;
+    width: 100%;
+}
+td.selected{
+    border: 2px solid black;
 }
