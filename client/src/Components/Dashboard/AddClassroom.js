@@ -5,7 +5,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
-import { makeStyles, createGenerateClassName } from '@material-ui/core/styles';
+import { makeStyles} from '@material-ui/core/styles';
 import BrandIcon from '../../resources/images/brand.png';
 
 // styles
@@ -36,14 +36,16 @@ const useStyles = makeStyles((theme) => ({
 
 // functional component
 export default function AddClassroom(props) {
-  const {showSnackBar, onAddClassroom} = props;
+  const {showSnackBar, onAddClassroom, role} = props;
   const classes = useStyles();
+  let isTeacher = (role === 'teacher');
+  let fieldName = (isTeacher ? 'classname': 'classcode');
 
   // handler for form-submit-operation
   const onFormSubmit = function(event){
     // read properties
     event.preventDefault();
-    let className = String(document.getElementById('className').value).trim();
+    let className = String(document.getElementById(fieldName).value).trim();
     if (className.length === 0){
         showSnackBar('error', 'Please provide a valid classname');
         return;
@@ -59,17 +61,18 @@ export default function AddClassroom(props) {
         <div className={classes.paper}>
             <Avatar className={classes.avatar} src={BrandIcon} />
             <Typography component="h1" variant="h5">
-                Add Classroom
+              {isTeacher ? "Create" : "Join"} Classroom
             </Typography>
-            <form className={classes.form} noValidate onSubmit={onFormSubmit}>
+            <form className={classes.form} noValidate 
+                onSubmit={onFormSubmit} autoComplete="off">
                 {/* input fields */}
                 <TextField variant="outlined" margin="normal" fullWidth
-                    id="className" label="Classname" name="className" autoComplete="text"
+                    id={fieldName} label={fieldName} name={fieldName} autoComplete="off"
                     autoFocus />
                 <Button id="submitButton" type="submit" fullWidth
                     variant="contained" color="primary"
                     className={classes.submit}>
-                    Add
+                    {isTeacher ? "Create" : "Join"}
                 </Button>
             </form>
         </div>

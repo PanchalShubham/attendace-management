@@ -31,7 +31,7 @@ import LoadingOverlay from 'react-loading-overlay';
 import {Redirect} from 'react-router-dom';
 import AddClassroom from './AddClassroom';
 import ClassroomPage from './ClassroomPage';
-import {fetchClassrooms, logoutUser, decrypt} from '../../DAO/DataAccessObject';
+import {fetchClassrooms, logoutUser, decrypt, createClassroom, joinClassroom} from '../../DAO/DataAccessObject';
 
 const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
@@ -138,6 +138,7 @@ export default function Dashboard() {
   const [redirect, setRedirect] = useState(null);
   const [snack, setSnack] = useState({visible: false, snackType: 'success', snackMessage: ''});
   const [classVisible, setClassVisible] = useState(false);
+  const [classrooms, setClassrooms] = useState([]);
 
 
   // snack-management
@@ -153,6 +154,13 @@ export default function Dashboard() {
     let item = localStorage.getItem('_auth');
     let tempUser = decrypt(item);
     setUser(tempUser);
+    fetchClassrooms(tempUser._id, tempUser.role).then(response => {
+      let data = response.data;
+      if (data.error) setSnack({visible: true, snackType: 'error', snackMessage: data.error});
+      else            setClassrooms(data.classrooms);
+    }).catch(err => {
+      setSnack({visible: true, snackType: 'error', snackMessage: err});
+    });
   }, []);
 
   // for logout
@@ -160,29 +168,57 @@ export default function Dashboard() {
     logoutUser().then((response)=>{
       let data = response.data;
       if (data.error) {
-        setSnack({visible: true, snackMessage: data.error});
+        setSnack({visible: true, snackType: 'error', snackMessage: data.error});
       } else {
         localStorage.removeItem('_auth');
         setRedirect(<Redirect to="/login" />)
       }
     }).catch(err => {
-      setSnack({visible: true, snackMessage: err});
+      setSnack({visible: true, snackType: 'error', snackMessage: err});
     });
   };
 
   // for add-classroom!
   const addClassroom = function(event) {
-    let item = <AddClassroom showSnackBar={showSnackBar} onAddClassroom={onAddClassroom}/>
+    let item = <AddClassroom showSnackBar={showSnackBar} 
+                    onAddClassroom={onAddClassroom} role={user != null ? user.role : 'teacher'}/>
     setCurrentItem(item);
+    setClassVisible(false);
   }
-  const onAddClassroom = function(className) {
-    setLoader({loading: true, text: `Adding classroom ${className}`});
+  const onAddClassroom = function(value) {
+    if (user == null)   return;
+    if (loader.loading) return;
+    let role = user.role;
+    let isTeacher = (role === 'teacher');
+    setLoader({loading: true, 
+      text: `${isTeacher ? 'Creating' : 'Joininig'} classroom`});
+    if (isTeacher) {
+      createClassroom(user._id, value).then(response => {
+        let data = response.data;
+        if (data.error)   setSnack({visible: true, snackType: 'error', snackMessage: data.error});
+        else              setSnack({visible: true, snackType: 'success', snackMessage: 'Your classroom was successfully created!'});
+      }).catch(err => {
+        setSnack({visible: true, snackType: 'error', snackMessage: err});
+      }).finally(()=>{
+        setLoader({loading: false, text: ''});
+      });
+    } else {
+
+    }
   }
 
   // for classroom-page
-  const onViewClassroom = function() {
-    let item = <ClassroomPage />
+  const onViewClassroom = function(classroomId) {
+    let index = -1;
+    for (let i = 0; i < classrooms.length; ++i)
+      if (classrooms[i]._id === classroomId) {
+        index = i; break;
+      }
+    if (index === -1) return;
+    let classroom = classrooms[index];
+    let item = <ClassroomPage classroom={classroom}/>
     setCurrentItem(item);
+    setClassVisible(true);
   }
 
   return redirect || (
@@ -219,25 +255,25 @@ export default function Dashboard() {
         <Divider />
         <List>
           <div>
-            <ListItem button onClick={addClassroom}>
+            <ListItem button onClick={addClassroom} disabled={loader.loading}>
               <ListItemIcon>
                 <AddBoxIcon />
               </ListItemIcon>
               <ListItemText primary={user != null ? (user.role === 'teacher' ? "New classroom" : "Join classroom") : ""}/>
             </ListItem>
-            <ListItem button onClick={onViewClassroom} disabled={!classVisible}>
+            <ListItem button onClick={onViewClassroom} disabled={loader.loading || !classVisible}>
               <ListItemIcon>
                 <DeleteIcon />
               </ListItemIcon>
               <ListItemText primary="Delete Classroom" />
             </ListItem>
-            <ListItem button disabled={!classVisible}>
+            <ListItem button disabled={loader.loading || !classVisible}>
               <ListItemIcon>
                 <GetAppIcon />
               </ListItemIcon>
               <ListItemText primary="Export Statistics" />
             </ListItem>
-            <ListItem button>
+            <ListItem button disabled={loader.loading}>
               <ListItemIcon>
                 <AccountBoxIcon />
               </ListItemIcon>
@@ -249,12 +285,13 @@ export default function Dashboard() {
         <List>
           <div>
             <ListSubheader inset>Your classrooms</ListSubheader>
-            <ListItem button>
-              <ListItemIcon>
-                <AssignmentIcon />
-              </ListItemIcon>
-              <ListItemText primary="Current month" />
-            </ListItem>
+            {classrooms.map(item => 
+              <ListItem button disabled={loader.loading} 
+                key={item._id} onClick={event => onViewClassroom(item._id)}>
+                <ListItemIcon><AssignmentIcon /></ListItemIcon>
+                <ListItemText primary={item.className}/>
+              </ListItem>            
+            )}
           </div>
         </List>
       </Drawer>
@@ -286,7 +323,7 @@ export default function Dashboard() {
               <CloseIcon fontSize="inherit" />
             </IconButton>
           }>
-          {snack.snackMessage}
+          {String(snack.snackMessage)}
         </Alert>
       </Snackbar>
 

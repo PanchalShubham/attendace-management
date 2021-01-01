@@ -1,18 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const User = require('../models/User');
 const Classroom = require('../models/Classroom');
 
-
-// authenticating middle-ware
-function isAuthenticated(req, res, next) {
-    if (!req.session.user) {
-        req.flash('error', "You must be logged in to perform that operation!");
-        res.redirect('/');
-    } else {
-        next( );
-    }
-}
 
 router.get('/', (req, res) => {
     res.status(200).send("Welcome to attendance-management system server!");
@@ -30,10 +21,10 @@ router.post('/register', (req, res) => {
         user.save().then(() => {
             return res.status(200).json({});
         }).catch(err => {
-            return res.status(200).json({error: err});
+            return res.status(500).json({error: err});
         });
     }).catch(err => {
-        return res.status(200).json({error: err});
+        return res.status(500).json({error: err});
     });
 });
 
@@ -43,10 +34,9 @@ router.post('/login', (req, res) => {
         if (!user)   return res.status(200).json({error: `That email is not registered for ${role} role!`});
         if (!user.isValidPassword(password)) return res.status(200).json({error: `Invalid password!`});
         user.password = null;
-        req.session.user = user;
         return res.status(200).json({user});
     }).catch(err => {
-        return res.status(200).json({error: err});
+        return res.status(500).json({error: err});
     });
 });
 
@@ -56,11 +46,38 @@ router.post('/logout', (req, res) => {
 });
 
 
-
-router.get('/user', (req, res) => {
-
+// fetches the list of classrooms based on role!
+router.get('/classrooms/:role/:userId', (req, res) => {
+    let {userId, role} = req.params; 
+    let query = (role === 'teacher' ? {instructorId : userId} : {students: userId});
+    Classroom.find(query).then(classrooms => {
+        return res.status(200).json({classrooms});
+    }).catch(err => {
+        return res.status(500).json({error: err});
+    });
 });
 
+
+// creates new classroom for instructor
+router.post('/create-classroom', (req, res) => {
+    let {userId, className} = req.body;
+    Classroom.findOne({instructorId: userId, className: className}).then(oldClassroom => {
+        if (oldClassroom)  return res.status(200).json({error: "You have already used that classname!"});
+        let classroom = new Classroom();
+        classroom.instructorId = userId;
+        classroom.className = className;
+        classroom.code = crypto.randomBytes(5).toString('hex');
+        classroom.students = [];
+        classroom.data = "[]";
+        classroom.save().then(()=>{
+            return res.status(200).json({classroom});
+        }).catch(err => {
+            return res.status(500).json({error: err});
+        });
+    }).catch(err => {
+        return res.status(500).json({error: err});
+    });
+});
 
 
 module.exports = router;

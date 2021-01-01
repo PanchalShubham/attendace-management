@@ -28,13 +28,28 @@ export const logoutUser = function() {
 }
 
 // fetches the user
-export const fetchClassrooms = function(userId) {
+export const fetchClassrooms = function(userId, role) {
     return new Promise(function(resolve, reject){
-        axios.get(SERVER_URL + "/classrooms", {userId})
+        axios.get(SERVER_URL + "/classrooms/" + role + "/" + userId)
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
 
+// create classroom
+export const createClassroom = function(userId, className) {
+    return new Promise(function(resolve, reject){
+        axios.post(SERVER_URL + "/create-classroom", {userId, className})
+            .then(response => resolve(response)).catch(err => reject(err));
+    });
+}
+
+// join classroom
+export const joinClassroom = function(userId, classCode) {
+    return new Promise(function(resolve, reject){
+        axios.post(SERVER_URL + "/join-classroom", {userId, classCode})
+            .then(response => resolve(response)).catch(err => reject(err));
+    });
+}
 
 
 export const encrypt = function(jsonObject) {

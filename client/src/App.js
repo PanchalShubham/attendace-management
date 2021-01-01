@@ -2,7 +2,7 @@ import React from 'react';
 import {BrowserRouter, Route, Switch, Redirect} from 'react-router-dom';
 import Homepage from './Components/Homepage/Homepage';
 import AuthForm from './Components/AuthForm/AuthForm';
-import InstructorDashboard from './Components/InstructorDashboard/InstructorDashboard';
+import Dashboard from './Components/Dashboard/Dashboard';
 import './App.css';
 
 // public route - only available to non-authenticated users
@@ -41,7 +41,7 @@ function App() {
           <PublicRoute exact path="/" component={Homepage} />
           <PublicRoute exact path="/login" component={AuthForm} register={false}/>
           <PublicRoute exact path="/register" component={AuthForm} register={true}/>
-          <PrivateRoute exact path="/dashboard" component={InstructorDashboard} />
+          <PrivateRoute exact path="/dashboard" component={Dashboard} />
         </Switch>
       </BrowserRouter>
     </div>
