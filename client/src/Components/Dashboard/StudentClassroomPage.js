@@ -119,7 +119,7 @@ const useStyles = makeStyles((theme) => ({
 
 // functional component for classroomPage
 export default function StudentClassroomPage(props){
-  const {userId, user, classroomName, loader, setLoader, setSnack} = props;
+  const {userId, user, classroomName, setLoader, setSnack} = props;
   const classes = useStyles();
   const [classroom, setClassroom] = useState(null);
   const [records, setRecords] = useState([]);

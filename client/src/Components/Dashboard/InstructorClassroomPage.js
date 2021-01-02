@@ -16,7 +16,6 @@ import FirstPageIcon from '@material-ui/icons/FirstPage';
 import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
-import Badge from '@material-ui/core/Badge';
 import {readClassroom, collectAttendance, 
           stopCollectingAttendance} from '../../DAO/DataAccessObject';
 import { TableHead } from '@material-ui/core';
@@ -177,7 +176,7 @@ export default function InstructorClassroomPage(props){
   const [records, setRecords] = useState([]);
   const [tempMessage, setTempMessage] = useState('Loading details of the classroom!');
 
-  let [columns, rows] = parseRecords(classroom, records);
+  let rows = parseRecords(classroom, records);
   // for table
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
