@@ -4,9 +4,9 @@ This repository contains the assignment for ReactJS Internship
 `cd client`  
 `sudo npm install`   
 `sudo npm start`  
-`browse http://localhost:3000/register`
-`browse http://localhost:3000/login`
-`browse http://localhost:3000/dashboard`
+`browse http://localhost:3000/register`  
+`browse http://localhost:3000/login`  
+`browse http://localhost:3000/dashboard`  
 
 # server (NodeJS)
 `cd server`  
