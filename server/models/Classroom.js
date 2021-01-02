@@ -3,7 +3,7 @@ const classroomSchema = new mongoose.Schema({
     className: {type: String},
     instructorId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     code: {type: String},
-    studentdOnce: [{type: String}],
+    studentOnce: [{type: String}],
     students: [{type: String}],
     collectingFor: {type: String}
 });

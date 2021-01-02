@@ -224,7 +224,7 @@ export default function Dashboard() {
         if (data.error) {
           setSnack({visible: true, snackType: 'error', snackMessage: data.error});
         } else {
-          setSnack({visible: true, snackType: 'success', snackMessage: 'Your classroom was successfully created!'});
+          setSnack({visible: true, snackType: 'success', snackMessage: 'Your were successfully added to the classroom!'});
           setUser(data.user);
         }
       }).catch(err => {
@@ -276,6 +276,10 @@ export default function Dashboard() {
   if (redirect)       return redirect;
   if (user === null)  return   <div>Loading your details...</div>
 
+  let isClassPageVisible = (currentItem != null && 
+    (currentItem.type === InstructorClassroomPage || 
+      currentItem.type === StudentClassroomPage));
+
   return (
     <LoadingOverlay active={loader.loading} spinner text={loader.text}>
     <div className={classes.root}>
@@ -316,13 +320,13 @@ export default function Dashboard() {
               </ListItemIcon>
               <ListItemText primary={(user.role === 'teacher' ? "New classroom" : "Join classroom")}/>
             </ListItem>
-            <ListItem button onClick={onDeleteClassroom} disabled={loader.loading || !currentItem}>
+            <ListItem button onClick={onDeleteClassroom} disabled={loader.loading || !isClassPageVisible}>
               <ListItemIcon>
                 <DeleteIcon />
               </ListItemIcon>
               <ListItemText primary="Delete Classroom" />
             </ListItem>
-            <ListItem button disabled={loader.loading || !currentItem}>
+            <ListItem button disabled={loader.loading || !isClassPageVisible}>
               <ListItemIcon>
                 <GetAppIcon />
               </ListItemIcon>

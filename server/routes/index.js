@@ -5,6 +5,16 @@ const User = require('../models/User');
 const Classroom = require('../models/Classroom');
 const AttendanceRecord = require('../models/AttendanceRecord');
 
+// edit the details of  the user before sending!
+function editBeforeSend(user, classrooms) {
+    user.password = null;
+    let names = [];
+    for (let i = 0; i < classrooms.length; ++i)
+        names.push(classrooms[i].className);
+    let jsonObject = {...user._doc, classrooms: names};
+    return jsonObject;
+}
+
 router.get('/', (req, res) => {
     res.status(200).send("Welcome to attendance-management system server!");
 });
@@ -18,7 +28,6 @@ router.post('/register', (req, res) => {
         user.email = email;
         user.role = role;
         user.password = user.encryptPassword(password);
-        user.classrooms = [];
         user.save().then(() => {
             return res.status(200).json({});
         }).catch(err => {
@@ -66,7 +75,13 @@ router.get('/user/:userId', (req, res) => {
     let {userId} = req.params;
     User.findOne({_id: userId}).then(user => {
         if (!user)  return res.status(200).json({error: `Failed to find your account!`});
-        return res.status(200).json({user});
+        let query = (user.role === 'teacher' ? {instructorId: userId} : {students: user.email});
+        Classroom.find(query).then(classrooms => {
+            user = editBeforeSend(user, classrooms);
+            return res.status(200).json({user});
+        }).catch(err => {
+            return res.status(500).json({error: err});
+        });
     }).catch(err => {
         return res.status(500).json({error: err});
     });
@@ -105,7 +120,7 @@ router.get('/classroom/:instructorId/:className', (req, res) => {
 // creates new classroom for instructor
 router.post('/create-classroom', (req, res) => {
     let {userId, className} = req.body;
-    User.findOne({_id: userId}).then(user => {
+    User.findOne({_id: userId, role: 'teacher'}).then(user => {
         if (!user)  return res.status(200).json({error: `Failed to find that user!`});
         Classroom.findOne({instructorId: userId, className: className}).then(oldClassroom => {
             if (oldClassroom)  return res.status(200).json({error: "You have already used that classname!"});
@@ -115,9 +130,9 @@ router.post('/create-classroom', (req, res) => {
             classroom.code = crypto.randomBytes(5).toString('hex');
             classroom.students = [];
             classroom.save().then(()=>{
-                user.classrooms.push(className);
-                user.save().then(()=>{
-                    return res.status(200).json({user, classroom});
+                Classroom.find({instructorId: userId}).then(classrooms => {
+                    user = editBeforeSend(user, classrooms);
+                    return res.status(200).json({user});
                 }).catch(err => {
                     return res.status(500).json({error: err});
                 });
@@ -142,10 +157,8 @@ router.post('/delete-classroom', (req, res) => {
             if (!classroom)  return res.status(200).json({error: "Failed to find that classroom!"});
             AttendanceRecord.deleteMany({classroomId: classroom._id}).then(()=>{
                 Classroom.deleteOne({instructorId: userId, className: className}).then(()=>{
-                    let index = user.classrooms.indexOf(classroom.className);
-                    if (index === -1)   return res.status(200).json({user});
-                    user.classrooms.splice(index, 1);
-                    user.save().then(()=>{
+                    Classroom.find({instructorId: userId}).then(classrooms => {
+                        user = editBeforeSend(user, classrooms);
                         return res.status(200).json({user});
                     }).catch(err => {
                         return res.status(500).json({error: err});
@@ -165,7 +178,7 @@ router.post('/delete-classroom', (req, res) => {
 // creates new classroom for instructor
 router.post('/join-classroom', (req, res) => {
     let {useremail, classCode} = req.body;
-    User.findOne({email: useremail}).then(user => {
+    User.findOne({email: useremail, role: 'student'}).then(user => {
         if (!user)  return res.status(200).json({error: `Failed to find that user!`});
         Classroom.findOne({code: classCode}).then(classroom => {
             if (!classroom) return res.status(200).json({error: `Failed to find that classroom!`});
@@ -174,13 +187,12 @@ router.post('/join-classroom', (req, res) => {
             classroom.students.push(useremail);
             classroom.studentOnce.push(useremail);
             classroom.save().then(()=>{
-                user.classrooms.push(classroom.className);
-                user.save().then(()=>{
-                    return res.status(200).json({user, classroom});
+                Classroom.find({students: user.email}).then(classrooms => {
+                    user = editBeforeSend(user, classrooms);
+                    return res.status(200).json({user});
                 }).catch(err => {
-                    console.log(err);
                     return res.status(500).json({error: err});
-                });
+                });                
             }).catch(err => {
                 console.log(err);
                 return res.status(500).json({error: err});
