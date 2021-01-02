@@ -265,20 +265,22 @@ export default function Dashboard() {
     let item = null;
     if (isTeacher) {
       item = <InstructorClassroomPage classroomName={classroomName} userId={user._id}
-      loader={loader} setLoader={setLoader} setSnack={setSnack} />
+      loader={loader} setLoader={setLoader} setSnack={setSnack} user={user}/>
     } else {
       item = <StudentClassroomPage classroomName={classroomName} userId={user._id}
-      loader={loader} setLoader={setLoader} setSnack={setSnack} />
+      loader={loader} setLoader={setLoader} setSnack={setSnack} user={user} />
     }
     setCurrentItem(item);
   }
 
-  if (redirect)       return redirect;
-  if (user === null)  return   <div>Loading your details...</div>
-
   let isClassPageVisible = (currentItem != null && 
     (currentItem.type === InstructorClassroomPage || 
       currentItem.type === StudentClassroomPage));
+
+  if (redirect)       return redirect;
+  if (user === null)  return   <div>Loading your details...</div>
+  let isTeacher = (user.role === 'teacher');
+
 
   return (
     <LoadingOverlay active={loader.loading} spinner text={loader.text}>
@@ -318,20 +320,20 @@ export default function Dashboard() {
               <ListItemIcon>
                 <AddBoxIcon />
               </ListItemIcon>
-              <ListItemText primary={(user.role === 'teacher' ? "New classroom" : "Join classroom")}/>
+              <ListItemText primary={(isTeacher ? "New classroom" : "Join classroom")}/>
             </ListItem>
             <ListItem button onClick={onDeleteClassroom} disabled={loader.loading || !isClassPageVisible}>
               <ListItemIcon>
                 <DeleteIcon />
               </ListItemIcon>
-              <ListItemText primary="Delete Classroom" />
+              <ListItemText primary={isTeacher ? "Delete Classroom" : "Leave Classroom"} />
             </ListItem>
-            <ListItem button disabled={loader.loading || !isClassPageVisible}>
+            {/* <ListItem button disabled={loader.loading || !isClassPageVisible}>
               <ListItemIcon>
                 <GetAppIcon />
               </ListItemIcon>
               <ListItemText primary="Export Statistics" />
-            </ListItem>
+            </ListItem> */}
             {/* <ListItem button disabled={loader.loading}>
               <ListItemIcon>
                 <AccountBoxIcon />

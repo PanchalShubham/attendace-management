@@ -1,11 +1,90 @@
 import React, {useState, useEffect} from 'react';
 import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import { makeStyles } from '@material-ui/core/styles';
-
-
+import TextField from '@material-ui/core/TextField'
+import PropTypes from 'prop-types';
+import { makeStyles, useTheme } from '@material-ui/core/styles';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableFooter from '@material-ui/core/TableFooter';
+import TablePagination from '@material-ui/core/TablePagination';
+import TableRow from '@material-ui/core/TableRow';
+import Paper from '@material-ui/core/Paper';
+import IconButton from '@material-ui/core/IconButton';
+import FirstPageIcon from '@material-ui/icons/FirstPage';
+import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
+import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
+import LastPageIcon from '@material-ui/icons/LastPage';
+import Badge from '@material-ui/core/Badge';
 import {readClassroom, collectAttendance, 
           stopCollectingAttendance} from '../../DAO/DataAccessObject';
+import { TableHead } from '@material-ui/core';
+
+const useStyles1 = makeStyles((theme) => ({
+  root: {
+    flexShrink: 0,
+    marginLeft: theme.spacing(2.5),
+  },
+}));
+
+function TablePaginationActions(props) {
+  const classes = useStyles1();
+  const theme = useTheme();
+  const { count, page, rowsPerPage, onChangePage } = props;
+
+  const handleFirstPageButtonClick = (event) => {
+    onChangePage(event, 0);
+  };
+
+  const handleBackButtonClick = (event) => {
+    onChangePage(event, page - 1);
+  };
+
+  const handleNextButtonClick = (event) => {
+    onChangePage(event, page + 1);
+  };
+
+  const handleLastPageButtonClick = (event) => {
+    onChangePage(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
+  };
+
+  return (
+    <div className={classes.root}>
+      <IconButton
+        onClick={handleFirstPageButtonClick}
+        disabled={page === 0}
+        aria-label="first page"
+      >
+        {theme.direction === 'rtl' ? <LastPageIcon /> : <FirstPageIcon />}
+      </IconButton>
+      <IconButton onClick={handleBackButtonClick} disabled={page === 0} aria-label="previous page">
+        {theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />}
+      </IconButton>
+      <IconButton
+        onClick={handleNextButtonClick}
+        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+        aria-label="next page"
+      >
+        {theme.direction === 'rtl' ? <KeyboardArrowLeft /> : <KeyboardArrowRight />}
+      </IconButton>
+      <IconButton
+        onClick={handleLastPageButtonClick}
+        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+        aria-label="last page"
+      >
+        {theme.direction === 'rtl' ? <FirstPageIcon /> : <LastPageIcon />}
+      </IconButton>
+    </div>
+  );
+}
+TablePaginationActions.propTypes = {
+  count: PropTypes.number.isRequired,
+  onChangePage: PropTypes.func.isRequired,
+  page: PropTypes.number.isRequired,
+  rowsPerPage: PropTypes.number.isRequired,
+};
+          
 
 // styles
 const useStyles = makeStyles((theme) => ({
@@ -30,8 +109,64 @@ const useStyles = makeStyles((theme) => ({
     padding: "10px", 
     width: "80%", 
     margin: "10px auto"
-  }
+  },
+  root: {
+    flexShrink: 0,
+    marginLeft: theme.spacing(2.5),
+  },
+  table: {
+    minWidth: 500,
+  },
 }));
+
+
+
+// parses the records for the table
+function parseRecords(classroom, records) {
+
+  let presentStyle = {
+    backgroundColor: "#cff4fc", 
+    color: '#055160', 
+    padding: '5px',
+    borderRadius: '5px'
+  };
+  let absentStyle = {
+    backgroundColor: "#f8d7da", 
+    color: '#842029', 
+    padding: '5px',
+    borderRadius: '5px'
+  };
+  let rows = [];
+  let columns = ['studentId'];
+  for (let i = 0; i < records.length; ++i)
+    columns.push(records[i].attendanceId);
+  let headerRow = [];
+  for (let i = 0; i < columns.length; ++i)
+    headerRow.push(<TableCell align="left" key={`head${i}`}><strong>{columns[i].toUpperCase()}</strong></TableCell>);
+  rows.push(headerRow);
+  if (classroom === null) return [columns, rows];
+  let students = classroom.studentOnce;
+  for (let i = 0; i < students.length; ++i) {
+    let studEmail = students[i];
+    let row = [];
+    row.push(<TableCell align="left">{studEmail}</TableCell>)
+    for (let j = 0; j< records.length; ++j) {
+      let rec = records[j];
+      let attendees = rec.students;
+      let attended = attendees.indexOf(studEmail) !== -1;
+      let item = null;
+      if (attended) {
+        item = <span style={presentStyle}>Present</span>
+      } else {
+        // item = <Badge color="secondary" badgeContent={"Absent"} />;
+        item = <span style={absentStyle}>Absent</span>
+      }
+      row.push(<TableCell align="left" key={`cell_${i}_${j}`}>{item}</TableCell>);
+    }
+    rows.push(row);
+  }
+  return [columns, rows];
+}
 
 
 // functional component for classroomPage
@@ -39,8 +174,22 @@ export default function InstructorClassroomPage(props){
   const {userId, classroomName, loader, setLoader, setSnack} = props;
   const classes = useStyles();
   const [classroom, setClassroom] = useState(null);
+  const [records, setRecords] = useState([]);
   const [tempMessage, setTempMessage] = useState('Loading details of the classroom!');
 
+  let [columns, rows] = parseRecords(classroom, records);
+  // for table
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+  
 
   // invokes whenever classroomName changes!
   useEffect(()=>{
@@ -52,6 +201,7 @@ export default function InstructorClassroomPage(props){
         setSnack({visible: true, snackType: 'error', snackMessage: data.error});
       } else {
         setClassroom(data.classroom);
+        setRecords(data.records);
       }
     }).catch(err => {
       setSnack({visible: true, snackType: 'error', snackMessage: err});
@@ -148,6 +298,63 @@ export default function InstructorClassroomPage(props){
 
 
       {/* displays the records */}
+      <div style={{textAlign: 'center'}}><br/>Your attendance record for this classroom!</div>
+      <TableContainer component={Paper}>
+      <Table className={classes.table} aria-label="custom pagination table">
+        <TableHead>
+          <TableRow>
+            {/* <TablePagination
+              rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+              colSpan={3}
+              count={rows.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              SelectProps={{
+                inputProps: { 'aria-label': 'rows per page' },
+                native: true,
+              }}
+              onChangePage={handleChangePage}
+              onChangeRowsPerPage={handleChangeRowsPerPage}
+              ActionsComponent={TablePaginationActions}
+            /> */}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {(rowsPerPage > 0
+            ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+            : rows
+          ).map((row) => (
+            <TableRow key={0}>
+              {row}
+            </TableRow>
+          ))}
+
+          {emptyRows > 0 && (
+            <TableRow style={{ height: 53 * emptyRows }}>
+              <TableCell colSpan={6} />
+            </TableRow>
+          )}
+        </TableBody>
+        <TableFooter>
+        </TableFooter>
+      </Table>
+    </TableContainer>
+    <div style={{textAlign: 'right'}}>
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+        colSpan={3}
+        count={rows.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        SelectProps={{
+          inputProps: { 'aria-label': 'rows per page' },
+          native: true,
+        }}
+        onChangePage={handleChangePage}
+        onChangeRowsPerPage={handleChangeRowsPerPage}
+        ActionsComponent={TablePaginationActions}
+      />
+    </div>
 
     </div>
   );
