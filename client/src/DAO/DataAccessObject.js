@@ -20,9 +20,16 @@ export const loginUser = function(user) {
 }
 
 // logout the user
-export const logoutUser = function() {
+export const logoutUser = function(userId) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/logout")
+        axios.post(SERVER_URL + "/logout", {userId})
+            .then(response => resolve(response)).catch(err => reject(err));
+    });
+}
+
+export const readUser = function(userId) {
+    return new Promise(function(resolve, reject){
+        axios.get(SERVER_URL + "/user/" + userId)
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
@@ -35,6 +42,14 @@ export const fetchClassrooms = function(userId, role) {
     });
 }
 
+// fetches the details of the given classroom
+export const readClassroom = function(userId, className) {
+    return new Promise(function(resolve, reject){
+        axios.get(SERVER_URL + "/classroom/" + userId + "/" + className)
+            .then(response => resolve(response)).catch(err => reject(err));
+    });
+}
+
 // create classroom
 export const createClassroom = function(userId, className) {
     return new Promise(function(resolve, reject){
@@ -43,10 +58,35 @@ export const createClassroom = function(userId, className) {
     });
 }
 
-// join classroom
-export const joinClassroom = function(userId, classCode) {
+// delete classroom
+export const deleteClassroom = function(userId, className) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/join-classroom", {userId, classCode})
+        axios.post(SERVER_URL + "/delete-classroom", {userId, className})
+            .then(response => resolve(response)).catch(err => reject(err));
+    });
+}
+
+// join classroom
+export const joinClassroom = function(useremail, classCode) {
+    return new Promise(function(resolve, reject){
+        axios.post(SERVER_URL + "/join-classroom", {useremail, classCode})
+            .then(response => resolve(response)).catch(err => reject(err));
+    });
+}
+
+
+
+// collect attendance
+export const collectAttendance = function(classroomId, attendanceId) {
+    return new Promise(function(resolve, reject){
+        axios.post(SERVER_URL + "/collect-attendance", {classroomId, attendanceId})
+            .then(response => resolve(response)).catch(err => reject(err));
+    });
+}
+// stops collecting attendance
+export const stopCollectingAttendance = function(classroomId, attendanceId) {
+    return new Promise(function(resolve, reject){
+        axios.post(SERVER_URL + "/stop-collecting", {classroomId, attendanceId})
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }

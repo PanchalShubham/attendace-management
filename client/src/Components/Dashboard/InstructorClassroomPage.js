@@ -35,7 +35,7 @@ const useStyles = makeStyles((theme) => ({
 
 
 // functional component for classroomPage
-export default function ClassroomPage(props){
+export default function InstructorClassroomPage(props){
   const {userId, classroomName, loader, setLoader, setSnack} = props;
   const classes = useStyles();
   const [classroom, setClassroom] = useState(null);

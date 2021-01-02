@@ -7,7 +7,9 @@ const userSchema = new mongoose.Schema({
     username: {type: String},
     email: {type: String},
     password: {type: String},
-    role: {type: String}
+    role: {type: String},
+    loggedIn: {type: Boolean},
+    classrooms: [{type: String}]
 });
 
 // method to encrypt password

@@ -36,8 +36,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // setup express-session
 app.use(session({
   secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
   store: new MongoStore({
       mongooseConnection: mongoose.connection
   }),

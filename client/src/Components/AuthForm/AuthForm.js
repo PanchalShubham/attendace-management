@@ -120,7 +120,7 @@ export default function AuthForm(props) {
             if (data.error) {
                 setError(data.error);
             } else {
-                localStorage.setItem('_auth', encrypt(data.user));
+                localStorage.setItem('_auth', encrypt(data.user._id));
                 setSuccess(`You are successfully logged in!`);
                 setRedirect(<Redirect to="/dashboard" />)
             }
@@ -152,13 +152,13 @@ export default function AuthForm(props) {
                         onClick={() => { setSuccess(null); setError(null);}}>
                             <CloseIcon fontSize="inherit" />
                         </IconButton>
-                    }> {success}</Alert>}
+                    }> {String(success)}</Alert>}
                     {error && <Alert severity="error" action={
                         <IconButton aria-label="close" color="inherit" size="small"
                         onClick={() => { setSuccess(null); setError(null);}}>
                             <CloseIcon fontSize="inherit" />
                         </IconButton>
-                    }> {error}</Alert>}
+                    }> {String(error)}</Alert>}
                 </Collapse>
 
                 {/* input fields */}
@@ -184,7 +184,7 @@ export default function AuthForm(props) {
                 </Button>
                 <Grid container>
                     <Grid item xs>
-                        {register && <Link href="#" variant="body2">Forgot password?</Link>}
+                        {!register && <Link href="#" variant="body2">Forgot password?</Link>}
                     </Grid>
                     <Grid item>
                         <Link href={register ? "/login" : "/register"} variant="body2">

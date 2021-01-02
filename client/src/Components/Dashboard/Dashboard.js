@@ -30,8 +30,10 @@ import LoadingOverlay from 'react-loading-overlay';
 
 import {Redirect} from 'react-router-dom';
 import AddClassroom from './AddClassroom';
-import ClassroomPage from './ClassroomPage';
-import {fetchClassrooms, logoutUser, decrypt, createClassroom, joinClassroom} from '../../DAO/DataAccessObject';
+import StudentClassroomPage from './StudentClassroomPage';
+import InstructorClassroomPage from './InstructorClassroomPage';
+import {readUser, logoutUser, decrypt, 
+          createClassroom, deleteClassroom, joinClassroom} from '../../DAO/DataAccessObject';
 
 const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
@@ -137,8 +139,6 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [redirect, setRedirect] = useState(null);
   const [snack, setSnack] = useState({visible: false, snackType: 'success', snackMessage: ''});
-  const [classVisible, setClassVisible] = useState(false);
-  const [classrooms, setClassrooms] = useState([]);
 
 
   // snack-management
@@ -152,20 +152,29 @@ export default function Dashboard() {
   // componentDidMount
   useEffect(function(){
     let item = localStorage.getItem('_auth');
-    let tempUser = decrypt(item);
-    setUser(tempUser);
-    fetchClassrooms(tempUser._id, tempUser.role).then(response => {
+    let userId = decrypt(item);
+    readUser(userId).then(response => {
       let data = response.data;
-      if (data.error) setSnack({visible: true, snackType: 'error', snackMessage: data.error});
-      else            setClassrooms(data.classrooms);
+      if (data.error) {
+        console.log(data.error);
+        setSnack({visible: true, snackType: 'error', })
+        localStorage.removeItem('_auth');
+        setRedirect(<Redirect to="/login" />)
+      } else {
+        setUser(data.user);        
+      }
     }).catch(err => {
-      setSnack({visible: true, snackType: 'error', snackMessage: err});
+      console.log(err);
+      localStorage.removeItem('_auth');
+      setRedirect(<Redirect to="/login" />)
     });
   }, []);
 
   // for logout
   const onLogout = function(event){
-    logoutUser().then((response)=>{
+    if (user == null) return;
+    let userId = user._id;
+    logoutUser(userId).then((response)=>{
       let data = response.data;
       if (data.error) {
         setSnack({visible: true, snackType: 'error', snackMessage: data.error});
@@ -178,12 +187,14 @@ export default function Dashboard() {
     });
   };
 
+
+
   // for add-classroom!
   const addClassroom = function(event) {
     let item = <AddClassroom showSnackBar={showSnackBar} 
-                    onAddClassroom={onAddClassroom} role={user != null ? user.role : 'teacher'}/>
+                    onAddClassroom={onAddClassroom} 
+                    role={user != null ? user.role : 'teacher'}/>
     setCurrentItem(item);
-    setClassVisible(false);
   }
   const onAddClassroom = function(value) {
     if (user == null)   return;
@@ -195,33 +206,77 @@ export default function Dashboard() {
     if (isTeacher) {
       createClassroom(user._id, value).then(response => {
         let data = response.data;
-        if (data.error)   setSnack({visible: true, snackType: 'error', snackMessage: data.error});
-        else              setSnack({visible: true, snackType: 'success', snackMessage: 'Your classroom was successfully created!'});
+        if (data.error) {
+          setSnack({visible: true, snackType: 'error', snackMessage: data.error});
+        } else {
+          setSnack({visible: true, snackType: 'success', snackMessage: 'Your classroom was successfully created!'});
+          setUser(data.user);
+        }
       }).catch(err => {
         setSnack({visible: true, snackType: 'error', snackMessage: err});
       }).finally(()=>{
         setLoader({loading: false, text: ''});
       });
     } else {
-
+      joinClassroom(user.email, value).then(response => {
+        let data = response.data;
+        console.log(data);
+        if (data.error) {
+          setSnack({visible: true, snackType: 'error', snackMessage: data.error});
+        } else {
+          setSnack({visible: true, snackType: 'success', snackMessage: 'Your classroom was successfully created!'});
+          setUser(data.user);
+        }
+      }).catch(err => {
+        setSnack({visible: true, snackType: 'error', snackMessage: err});
+      }).finally(()=>{
+        setLoader({loading: false, text: ''});
+      });
     }
   }
 
-  // for classroom-page
-  const onViewClassroom = function(classroomId) {
-    let index = -1;
-    for (let i = 0; i < classrooms.length; ++i)
-      if (classrooms[i]._id === classroomId) {
-        index = i; break;
+
+
+  // for delete-classroom
+  const onDeleteClassroom = function() {
+    if (user === null)  return;
+    let className = currentItem.props.classroomName;
+    setLoader({loading: true, text: `Please wait! I'm processing your request`});
+    deleteClassroom(user._id, className).then(response => {
+      let data = response.data;
+      if (data.error) {
+        setSnack({visible: true, snackType: 'error', snackMessage: data.error});
+      } else {
+        setSnack({visible: true, snackType: 'success', snackMessage: `Your classroom with all records was successfully deleted!`});
+        setUser(data.user);
+        setCurrentItem(null);
       }
-    if (index === -1) return;
-    let classroom = classrooms[index];
-    let item = <ClassroomPage classroom={classroom}/>
+    }).catch(err => {
+      setSnack({visible: true, snackType: 'error', snackMessage: err});
+    }).finally(()=>{
+      setLoader({loading: false, text: ''})
+    });
+  };
+
+  // for classroom-page
+  const onViewClassroom = function(classroomName) {
+    if (user == null) return;
+    let isTeacher = (user.role === 'teacher');
+    let item = null;
+    if (isTeacher) {
+      item = <InstructorClassroomPage classroomName={classroomName} userId={user._id}
+      loader={loader} setLoader={setLoader} setSnack={setSnack} />
+    } else {
+      item = <StudentClassroomPage classroomName={classroomName} userId={user._id}
+      loader={loader} setLoader={setLoader} setSnack={setSnack} />
+    }
     setCurrentItem(item);
-    setClassVisible(true);
   }
 
-  return redirect || (
+  if (redirect)       return redirect;
+  if (user === null)  return   <div>Loading your details...</div>
+
+  return (
     <LoadingOverlay active={loader.loading} spinner text={loader.text}>
     <div className={classes.root}>
       <CssBaseline />
@@ -234,7 +289,7 @@ export default function Dashboard() {
             <MenuIcon />
           </IconButton>
           <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-            {user != null ? user.username + "(" + user.role + ")" : "<username>"}
+            {user.username + "(" + user.role + ")"}
           </Typography>
           <IconButton color="inherit" onClick={onLogout}>
             <ExitToAppIcon />
@@ -259,37 +314,37 @@ export default function Dashboard() {
               <ListItemIcon>
                 <AddBoxIcon />
               </ListItemIcon>
-              <ListItemText primary={user != null ? (user.role === 'teacher' ? "New classroom" : "Join classroom") : ""}/>
+              <ListItemText primary={(user.role === 'teacher' ? "New classroom" : "Join classroom")}/>
             </ListItem>
-            <ListItem button onClick={onViewClassroom} disabled={loader.loading || !classVisible}>
+            <ListItem button onClick={onDeleteClassroom} disabled={loader.loading || !currentItem}>
               <ListItemIcon>
                 <DeleteIcon />
               </ListItemIcon>
               <ListItemText primary="Delete Classroom" />
             </ListItem>
-            <ListItem button disabled={loader.loading || !classVisible}>
+            <ListItem button disabled={loader.loading || !currentItem}>
               <ListItemIcon>
                 <GetAppIcon />
               </ListItemIcon>
               <ListItemText primary="Export Statistics" />
             </ListItem>
-            <ListItem button disabled={loader.loading}>
+            {/* <ListItem button disabled={loader.loading}>
               <ListItemIcon>
                 <AccountBoxIcon />
               </ListItemIcon>
               <ListItemText primary="Manage Profile" />
-            </ListItem>
+            </ListItem> */}
           </div>          
         </List>
         <Divider />
         <List>
           <div>
             <ListSubheader inset>Your classrooms</ListSubheader>
-            {classrooms.map(item => 
+            {user.classrooms && user.classrooms.map(item => 
               <ListItem button disabled={loader.loading} 
-                key={item._id} onClick={event => onViewClassroom(item._id)}>
+                key={item} onClick={event => onViewClassroom(item)}>
                 <ListItemIcon><AssignmentIcon /></ListItemIcon>
-                <ListItemText primary={item.className}/>
+                <ListItemText primary={item}/>
               </ListItem>            
             )}
           </div>
@@ -303,7 +358,7 @@ export default function Dashboard() {
         <div className={classes.appBarSpacer} />
         <Container maxWidth="lg" className={classes.container}>
           {!currentItem && 
-          <p>Welcome {user != null ? user.username : "<username>"}<br/>We are glad to see here.<br/>
+          <p>Welcome {user.username}!<br/>We are glad to see here.<br/>
            Click on the left menu to get started!</p>}
         </Container>
         {currentItem}
