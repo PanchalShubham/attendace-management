@@ -1,15 +1,17 @@
 require('dotenv').config();
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var session = require('express-session');
-var MongoStore = require('connect-mongo')(session);
-var mongoose = require('mongoose');
-var flash = require('connect-flash');
-var cors = require('cors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const MongoStore = require('connect-mongo')(session);
+const mongoose = require('mongoose');
+const cors = require('cors');
 
 // import roters
 const indexRouter = require('./routes/index');
+const authRouter = require('./routes/auth');
+const addDeleteClassroomRouter = require('./routes/add_delete_classroom');
+const attendanceRouter = require('./routes/attendance');
 
 // mongodb connection
 // establish connection with db
@@ -43,11 +45,14 @@ app.use(session({
   }),
   cookie: {maxAge: 180 * 60 * 1000}
 }));  
-app.use(flash());
 app.use(cors());
 
 // define routers
 app.use('/', indexRouter);
+app.use('/', authRouter);
+app.use('/', addDeleteClassroomRouter);
+app.use('/', attendanceRouter);
+// anything other than that is 404
 app.get('/:anything', (req, res) => {
     res.status(404).send();
 });
