@@ -57,13 +57,14 @@ router.post('/create-classroom', (req, res) => {
 
 // deletes the given classroom
 router.post('/delete-classroom', (req, res) => {
-    let {userId, className} = req.body;
-    User.findOne({_id: userId, role: 'teacher'}).then(user => {
-        if (!user)  return res.status(200).json({error: `Failed to find that user!`});
-        Classroom.findOne({instructorId: userId, className: className}).then(classroom => {
-            if (!classroom)  return res.status(200).json({error: "Failed to find that classroom!"});
-            AttendanceRecord.deleteMany({classroomId: classroom._id}).then(()=>{
-                Classroom.deleteOne({instructorId: userId, className: className}).then(()=>{
+    let {classroomId} = req.body;
+    Classroom.findOne({_id: classroomId}).then(classroom => {
+        if (!classroom)  return res.status(200).json({error: "Failed to find that classroom!"});
+        AttendanceRecord.deleteMany({classroomId}).then(()=>{
+            Classroom.deleteOne({_id: classroomId}).then(()=>{
+                let userId = classroom.instructorId;
+                User.findOne({_id: userId}).then(user => {
+                    if (!user)  return res.status(200).json({error: `Failed to find your account!`});
                     Classroom.find({instructorId: userId}).then(classrooms => {
                         user = editBeforeSend(user, classrooms);
                         return res.status(200).json({user});
@@ -72,8 +73,7 @@ router.post('/delete-classroom', (req, res) => {
                         return res.status(500).json({error: err});
                     });
                 }).catch(err => {
-                    console.log(err);
-                    return res.status(500).json({error: err});
+                    return res.status(500).json({});
                 });
             }).catch(err => {
                 console.log(err);
@@ -83,6 +83,9 @@ router.post('/delete-classroom', (req, res) => {
             console.log(err);
             return res.status(500).json({error: err});
         });
+    }).catch(err => {
+        console.log(err);
+        return res.status(500).json({error: err});
     });
 });
 

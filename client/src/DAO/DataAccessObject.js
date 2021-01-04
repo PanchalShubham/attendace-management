@@ -59,9 +59,9 @@ export const createClassroom = function(userId, className) {
 }
 
 // delete classroom
-export const deleteClassroom = function(userId, className) {
+export const deleteClassroom = function(classroomId) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/delete-classroom", {userId, className})
+        axios.post(SERVER_URL + "/delete-classroom", {classroomId})
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }

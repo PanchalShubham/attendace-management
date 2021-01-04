@@ -170,7 +170,7 @@ function parseRecords(classroom, records) {
 
 // functional component for classroomPage
 export default function InstructorClassroomPage(props){
-  const {userId, classroomName, loader, setLoader, setSnack} = props;
+  const {userId, classroomId, loader, setLoader, setSnack} = props;
   const classes = useStyles();
   const [classroom, setClassroom] = useState(null);
   const [records, setRecords] = useState([]);
@@ -193,7 +193,7 @@ export default function InstructorClassroomPage(props){
   // invokes whenever classroomName changes!
   useEffect(()=>{
     setLoader({loading: true, text: `Please wait! I'm fetching details for this classroom`});
-    readClassroom(userId, classroomName).then(response=>{
+    readClassroom(classroomId).then(response=>{
       let data = response.data;
       if (data.error) {
         setTempMessage('Failed to load details of this classroom!');
@@ -207,7 +207,7 @@ export default function InstructorClassroomPage(props){
     }).finally(()=>{
       setLoader({loading: false, text: ``});
     });
-  }, [classroomName]);
+  }, [classroomId]);
 
 
 

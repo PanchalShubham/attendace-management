@@ -240,10 +240,10 @@ export default function Dashboard() {
   const onDeleteClassroom = function() {
     if (user === null)  return;
     if (loader.loading) return;
-    let className = currentItem.props.classroomName;
     setLoader({loading: true, text: `Please wait! I'm processing your request`});
+    let {classroomId} = currentItem.props;
     if (user.role === 'teacher') {
-      deleteClassroom(user._id, className).then(response => {
+      deleteClassroom(classroomId).then(response => {
         let data = response.data;
         if (data.error) {
           setSnack({visible: true, snackType: 'error', snackMessage: data.error});
@@ -258,7 +258,6 @@ export default function Dashboard() {
         setLoader({loading: false, text: ''})
       });  
     } else {
-      let {classroomId} = currentItem.props;
       leaveClassroom(user.email, classroomId).then(response => {
         let data = response.data;
         if (data.error) {
@@ -280,11 +279,10 @@ export default function Dashboard() {
   const onViewClassroom = function(classroom) {
     if (user === null)  return;
     if (loader.loading) return;
-    let classroomName = classroom.className;
     let isTeacher = (user.role === 'teacher');
     let item = null;
     if (isTeacher) {
-      item = <InstructorClassroomPage classroomName={classroomName} userId={user._id}
+      item = <InstructorClassroomPage classroomId={classroom._id} userId={user._id}
       loader={loader} setLoader={setLoader} setSnack={setSnack} user={user}/>
     } else {
       item = <StudentClassroomPage classroomId={classroom._id} userId={user._id}
