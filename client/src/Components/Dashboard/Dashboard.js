@@ -31,7 +31,8 @@ import AddClassroom from './AddClassroom';
 import StudentClassroomPage from './StudentClassroomPage';
 import InstructorClassroomPage from './InstructorClassroomPage';
 import {readUser, logoutUser, decrypt, 
-          createClassroom, deleteClassroom, joinClassroom} from '../../DAO/DataAccessObject';
+          createClassroom, deleteClassroom, 
+          joinClassroom, leaveClassroom} from '../../DAO/DataAccessObject';
 
 const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
@@ -129,7 +130,7 @@ const useStyles = makeStyles((theme) => ({
 // functional component
 export default function Dashboard() {
   const classes = useStyles();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const handleDrawerOpen = () => { setOpen(true); };
   const handleDrawerClose = () => { setOpen(false); };
   const [loader, setLoader] = useState({loading: false, text: ''})
@@ -238,34 +239,55 @@ export default function Dashboard() {
   // for delete-classroom
   const onDeleteClassroom = function() {
     if (user === null)  return;
+    if (loader.loading) return;
     let className = currentItem.props.classroomName;
     setLoader({loading: true, text: `Please wait! I'm processing your request`});
-    deleteClassroom(user._id, className).then(response => {
-      let data = response.data;
-      if (data.error) {
-        setSnack({visible: true, snackType: 'error', snackMessage: data.error});
-      } else {
-        setSnack({visible: true, snackType: 'success', snackMessage: `Your classroom with all records was successfully deleted!`});
-        setUser(data.user);
-        setCurrentItem(null);
-      }
-    }).catch(err => {
-      setSnack({visible: true, snackType: 'error', snackMessage: err});
-    }).finally(()=>{
-      setLoader({loading: false, text: ''})
-    });
+    if (user.role === 'teacher') {
+      deleteClassroom(user._id, className).then(response => {
+        let data = response.data;
+        if (data.error) {
+          setSnack({visible: true, snackType: 'error', snackMessage: data.error});
+        } else {
+          setSnack({visible: true, snackType: 'success', snackMessage: `Your classroom with all records was successfully deleted!`});
+          setUser(data.user);
+          setCurrentItem(null);
+        }
+      }).catch(err => {
+        setSnack({visible: true, snackType: 'error', snackMessage: err});
+      }).finally(()=>{
+        setLoader({loading: false, text: ''})
+      });  
+    } else {
+      let {classroomId} = currentItem.props;
+      leaveClassroom(user.email, classroomId).then(response => {
+        let data = response.data;
+        if (data.error) {
+          setSnack({visible: true, snackType: 'error', snackMessage: data.error});
+        } else {
+          setSnack({visible: true, snackType: 'success', snackMessage: `You were successfully removed from the classroom!`});
+          setUser(data.user);
+          setCurrentItem(null);
+        }
+      }).catch(err => {
+        setSnack({visible: true, snackType: 'error', snackMessage: err});
+      }).finally(()=>{
+        setLoader({loading: false, text: ''})
+      });  
+    }
   };
 
   // for classroom-page
-  const onViewClassroom = function(classroomName) {
-    if (user == null) return;
+  const onViewClassroom = function(classroom) {
+    if (user === null)  return;
+    if (loader.loading) return;
+    let classroomName = classroom.className;
     let isTeacher = (user.role === 'teacher');
     let item = null;
     if (isTeacher) {
       item = <InstructorClassroomPage classroomName={classroomName} userId={user._id}
       loader={loader} setLoader={setLoader} setSnack={setSnack} user={user}/>
     } else {
-      item = <StudentClassroomPage classroomName={classroomName} userId={user._id}
+      item = <StudentClassroomPage classroomId={classroom._id} userId={user._id}
       loader={loader} setLoader={setLoader} setSnack={setSnack} user={user} />
     }
     setCurrentItem(item);
@@ -346,9 +368,9 @@ export default function Dashboard() {
             <ListSubheader inset>Your classrooms</ListSubheader>
             {user.classrooms && user.classrooms.map(item => 
               <ListItem button disabled={loader.loading} 
-                key={item} onClick={event => onViewClassroom(item)}>
+                key={item._id} onClick={event => onViewClassroom(item)}>
                 <ListItemIcon><AssignmentIcon /></ListItemIcon>
-                <ListItemText primary={item}/>
+                <ListItemText primary={item.className}/>
               </ListItem>            
             )}
           </div>

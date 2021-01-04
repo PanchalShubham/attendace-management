@@ -8,8 +8,10 @@ const AttendanceRecord = require('../models/AttendanceRecord');
 function editBeforeSend(user, classrooms) {
     user.password = null;
     let names = [];
-    for (let i = 0; i < classrooms.length; ++i)
-        names.push(classrooms[i].className);
+    for (let i = 0; i < classrooms.length; ++i){
+        let {_id, className, instructorId, code} = classrooms[i];
+        names.push({_id, className, instructorId, code});
+    }
     let jsonObject = {...user._doc, classrooms: names};
     return jsonObject;
 }
@@ -42,19 +44,12 @@ router.get('/user/:userId', (req, res) => {
 
 
 // fetch the details of given classroom
-router.get('/classroom/:userId/:className', (req, res) => {
-    let {userId, className} = req.params;
-    User.findOne({_id : userId}).then(user => {
-        if (!user)  return res.status(200).json({error: `Failed to find your account!`});
-        let query = (user.role === 'teacher' ? {instructorId: userId, className} : {students: user.email, className});
-        Classroom.findOne(query).then(classroom => {
-            if (!classroom) return res.status(200).json({error: `Failed to find that classroom!`});
-            AttendanceRecord.find({classroomId: classroom._id}).then(records => {
-                return res.status(200).json({classroom, records});
-            }).catch(err => {
-                console.log(err);
-                return res.status(500).json({error: err});
-            });
+router.get('/classroom/:classroomId', (req, res) => {
+    let {classroomId} = req.params;
+    Classroom.findOne({_id: classroomId}).then(classroom => {
+        if (!classroom) return res.status(200).json({error: `Failed to find that classroom!`});
+        AttendanceRecord.find({classroomId}).then(records => {
+            return res.status(200).json({classroom, records});
         }).catch(err => {
             console.log(err);
             return res.status(500).json({error: err});

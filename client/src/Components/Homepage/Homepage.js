@@ -46,9 +46,15 @@ function Homepage(props) {
                 <div className={classes.rightFlexBox}>
                     <p>
                         - One place to manage all your attendances! <br/>
+                        - Create and delete classrooms on-demand! <br/>
                         - Collect attendance on-demand! <br/>
                         - Maintain your attendance record with ease! <br/>
-                        - 
+                        - Export attendance-statistics of your classroom! <br/>
+                        - and many more features for free!
+                    </p>
+                    <p>
+                        Sounds exciting? <br/>
+                        Click on the button below to get started!
                     </p>
                     <Button className={classes.button} variant="contained" color="primary" href="/login">Sign In</Button>
                     OR

@@ -9,8 +9,10 @@ const AttendanceRecord = require('../models/AttendanceRecord');
 function editBeforeSend(user, classrooms) {
     user.password = null;
     let names = [];
-    for (let i = 0; i < classrooms.length; ++i)
-        names.push(classrooms[i].className);
+    for (let i = 0; i < classrooms.length; ++i){
+        let {_id, className, instructorId, code} = classrooms[i];
+        names.push({_id, className, instructorId, code});
+    }
     let jsonObject = {...user._doc, classrooms: names};
     return jsonObject;
 }

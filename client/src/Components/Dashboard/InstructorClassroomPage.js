@@ -143,7 +143,7 @@ function parseRecords(classroom, records) {
   for (let i = 0; i < columns.length; ++i)
     headerRow.push(<TableCell align="left" key={`head${i}`}><strong>{columns[i].toUpperCase()}</strong></TableCell>);
   rows.push(headerRow);
-  if (classroom === null) return [columns, rows];
+  if (classroom === null) return rows;
   let students = classroom.studentOnce;
   for (let i = 0; i < students.length; ++i) {
     let studEmail = students[i];
@@ -164,7 +164,7 @@ function parseRecords(classroom, records) {
     }
     rows.push(row);
   }
-  return [columns, rows];
+  return rows;
 }
 
 
@@ -207,7 +207,7 @@ export default function InstructorClassroomPage(props){
     }).finally(()=>{
       setLoader({loading: false, text: ``});
     });
-  }, classroomName);
+  }, [classroomName]);
 
 
 
@@ -300,24 +300,6 @@ export default function InstructorClassroomPage(props){
       <div style={{textAlign: 'center'}}><br/>Your attendance record for this classroom!</div>
       <TableContainer component={Paper}>
       <Table className={classes.table} aria-label="custom pagination table">
-        <TableHead>
-          <TableRow>
-            {/* <TablePagination
-              rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-              colSpan={3}
-              count={rows.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              SelectProps={{
-                inputProps: { 'aria-label': 'rows per page' },
-                native: true,
-              }}
-              onChangePage={handleChangePage}
-              onChangeRowsPerPage={handleChangeRowsPerPage}
-              ActionsComponent={TablePaginationActions}
-            /> */}
-          </TableRow>
-        </TableHead>
         <TableBody>
           {(rowsPerPage > 0
             ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)

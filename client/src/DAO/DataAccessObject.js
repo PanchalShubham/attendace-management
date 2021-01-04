@@ -43,9 +43,9 @@ export const fetchClassrooms = function(userId, role) {
 }
 
 // fetches the details of the given classroom
-export const readClassroom = function(userId, className) {
+export const readClassroom = function(classroomId) {
     return new Promise(function(resolve, reject){
-        axios.get(SERVER_URL + "/classroom/" + userId + "/" + className)
+        axios.get(SERVER_URL + "/classroom/" + classroomId)
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
@@ -70,6 +70,14 @@ export const deleteClassroom = function(userId, className) {
 export const joinClassroom = function(useremail, classCode) {
     return new Promise(function(resolve, reject){
         axios.post(SERVER_URL + "/join-classroom", {useremail, classCode})
+            .then(response => resolve(response)).catch(err => reject(err));
+    });
+}
+
+// leave classroom
+export const leaveClassroom = function(userEmail, classroomId) {
+    return new Promise(function(resolve, reject){
+        axios.post(SERVER_URL + "/leave-classroom", {userEmail, classroomId})
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }

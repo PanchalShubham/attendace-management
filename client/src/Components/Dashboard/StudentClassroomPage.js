@@ -119,7 +119,7 @@ const useStyles = makeStyles((theme) => ({
 
 // functional component for classroomPage
 export default function StudentClassroomPage(props){
-  const {userId, user, classroomName, setLoader, setSnack} = props;
+  const {userId, user, classroomId, setLoader, setSnack} = props;
   const classes = useStyles();
   const [classroom, setClassroom] = useState(null);
   const [records, setRecords] = useState([]);
@@ -155,7 +155,7 @@ export default function StudentClassroomPage(props){
   // invokes whenever classroomName changes!
   useEffect(()=>{
     setLoader({loading: true, text: `Please wait! I'm fetching details for this classroom`});
-    readClassroom(userId, classroomName).then(response=>{
+    readClassroom(classroomId).then(response=>{
       let data = response.data;
       if (data.error) {
         setTempMessage('Failed to load details of this classroom!');
@@ -169,7 +169,7 @@ export default function StudentClassroomPage(props){
     }).finally(()=>{
       setLoader({loading: false, text: ``});
     });
-  }, classroomName);
+  }, [classroomId]);
 
   // makes a request to mark attendance
   const onMarkAttendance = function() {
@@ -231,7 +231,7 @@ export default function StudentClassroomPage(props){
             ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
             : rows
           ).map((row) => (
-            <TableRow key={row.name}>
+            <TableRow key={row.key}>
               <TableCell component="th" scope="row">
                 {row.key}
               </TableCell>
