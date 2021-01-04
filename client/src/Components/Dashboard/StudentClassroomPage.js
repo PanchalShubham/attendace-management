@@ -119,7 +119,7 @@ const useStyles = makeStyles((theme) => ({
 
 // functional component for classroomPage
 export default function StudentClassroomPage(props){
-  const {userId, user, classroomId, setLoader, setSnack} = props;
+  const {user, classroomId, setLoader, setSnack} = props;
   const classes = useStyles();
   const [classroom, setClassroom] = useState(null);
   const [records, setRecords] = useState([]);
@@ -169,7 +169,7 @@ export default function StudentClassroomPage(props){
     }).finally(()=>{
       setLoader({loading: false, text: ``});
     });
-  }, [classroomId]);
+  }, [classroomId, setLoader, setSnack]);
 
   // makes a request to mark attendance
   const onMarkAttendance = function() {
@@ -225,7 +225,7 @@ export default function StudentClassroomPage(props){
       {/* displays the records */}
       <div style={{textAlign: 'center'}}><br/>Your attendance record for this classroom!</div>
       <TableContainer component={Paper}>
-      <Table className={classes.table} aria-label="custom pagination table">
+      <Table className={classes.table} aria-label="custom pagination table" id="attendanceRecordTable">
         <TableBody>
           {(rowsPerPage > 0
             ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -247,7 +247,11 @@ export default function StudentClassroomPage(props){
             </TableRow>
           )}
         </TableBody>
-        <TableFooter>
+      </Table>
+    </TableContainer>
+    <TableContainer>
+      <Table>
+      <TableFooter>
           <TableRow>
             <TablePagination
               rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}

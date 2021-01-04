@@ -21,11 +21,10 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import AddBoxIcon from '@material-ui/icons/AddBox';
 import DeleteIcon from '@material-ui/icons/Delete';
+import GetAppIcon from '@material-ui/icons/GetApp';
 import Snackbar from '@material-ui/core/Snackbar';
 import CloseIcon from '@material-ui/icons/Close';
 import LoadingOverlay from 'react-loading-overlay';
-
-
 import {Redirect} from 'react-router-dom';
 import AddClassroom from './AddClassroom';
 import StudentClassroomPage from './StudentClassroomPage';
@@ -282,15 +281,47 @@ export default function Dashboard() {
     let isTeacher = (user.role === 'teacher');
     let item = null;
     if (isTeacher) {
-      item = <InstructorClassroomPage classroomId={classroom._id} userId={user._id}
-      loader={loader} setLoader={setLoader} setSnack={setSnack} user={user}/>
+      item = <InstructorClassroomPage classroomId={classroom._id} loader={loader} 
+              setLoader={setLoader} setSnack={setSnack} user={user}
+              className={classroom.className}/>
     } else {
-      item = <StudentClassroomPage classroomId={classroom._id} userId={user._id}
-      loader={loader} setLoader={setLoader} setSnack={setSnack} user={user} />
+      item = <StudentClassroomPage classroomId={classroom._id} loader={loader} 
+              setLoader={setLoader} setSnack={setSnack} user={user} 
+              className={classroom.className}/>
     }
     setCurrentItem(item);
   }
 
+
+  // on export stats
+  const onExportStats = function() {
+    let csvText = "";
+    let rows = document.querySelectorAll('#attendanceRecordTable tr');
+    for (let i = 0; i < rows.length; ++i) {
+      let row = rows[i];
+      let cols = row.children;
+      if (cols.length === 0)  continue;
+      if (cols[0].innerText === '') continue;
+      let text = cols[0].innerText;
+      for (let j = 1; j < cols.length; ++j) {
+        let col = cols[j];
+        text += ", " + col.innerText;
+      }
+      csvText += text + "\n";
+    }
+    // download the file as csvText
+    let {className} = currentItem.props;
+    let filename = `${user.email}-${user.role}-${className}.csv`;
+    let element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(csvText));
+    element.setAttribute('download', filename);  
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  }
+
+  // check if course-page is visible(decides export and delete  button visibility)
   let isClassPageVisible = (currentItem != null && 
     (currentItem.type === InstructorClassroomPage || 
       currentItem.type === StudentClassroomPage));
@@ -304,6 +335,7 @@ export default function Dashboard() {
     <LoadingOverlay active={loader.loading} spinner text={loader.text}>
     <div className={classes.root}>
       <CssBaseline />
+
       {/* topbar */}
       <AppBar position="absolute" className={clsx(classes.appBar, open && classes.appBarShift)}>
         <Toolbar className={classes.toolbar}>
@@ -346,12 +378,12 @@ export default function Dashboard() {
               </ListItemIcon>
               <ListItemText primary={isTeacher ? "Delete Classroom" : "Leave Classroom"} />
             </ListItem>
-            {/* <ListItem button disabled={loader.loading || !isClassPageVisible}>
+            <ListItem button onClick={onExportStats} disabled={loader.loading || !isClassPageVisible}>
               <ListItemIcon>
                 <GetAppIcon />
               </ListItemIcon>
               <ListItemText primary="Export Statistics" />
-            </ListItem> */}
+            </ListItem>
             {/* <ListItem button disabled={loader.loading}>
               <ListItemIcon>
                 <AccountBoxIcon />
@@ -387,8 +419,6 @@ export default function Dashboard() {
         </Container>
         {currentItem}
       </main>
-
-
 
 
 

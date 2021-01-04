@@ -21,7 +21,12 @@ router.post('/collect-attendance', (req, res) => {
             record.save().then(() => {
                 classroom.collectingFor = attendanceId;
                 classroom.save().then(()=>{
-                    return res.status(200).json({classroom});
+                    AttendanceRecord.find({classroomId}).then(records => {
+                        return res.status(200).json({classroom, records});
+                    }).catch(err => {
+                        console.log(err);
+                        return res.status(500).json({error: err});
+                    });
                 }).catch(err => {
                     console.log(err);
                     return res.status(500).json({error: err});
@@ -52,7 +57,12 @@ router.post('/stop-collecting', (req, res) => {
             record.save().then(() => {
                 classroom.collectingFor = null;
                 classroom.save().then(()=>{
-                    return res.status(200).json({classroom});
+                    AttendanceRecord.find({classroomId}).then(records => {
+                        return res.status(200).json({classroom, records});
+                    }).catch(err => {
+                        console.log(err);
+                        return res.status(500).json({error: err});
+                    });
                 }).catch(err => {
                     console.log(err);
                     return res.status(500).json({error: err});

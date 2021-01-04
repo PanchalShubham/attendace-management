@@ -18,7 +18,6 @@ import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
 import {readClassroom, collectAttendance, 
           stopCollectingAttendance} from '../../DAO/DataAccessObject';
-import { TableHead } from '@material-ui/core';
 
 const useStyles1 = makeStyles((theme) => ({
   root: {
@@ -122,7 +121,6 @@ const useStyles = makeStyles((theme) => ({
 
 // parses the records for the table
 function parseRecords(classroom, records) {
-
   let presentStyle = {
     backgroundColor: "#cff4fc", 
     color: '#055160', 
@@ -142,13 +140,13 @@ function parseRecords(classroom, records) {
   let headerRow = [];
   for (let i = 0; i < columns.length; ++i)
     headerRow.push(<TableCell align="left" key={`head${i}`}><strong>{columns[i].toUpperCase()}</strong></TableCell>);
-  rows.push(headerRow);
+  rows.push({key: `row_0`, value: headerRow});
   if (classroom === null) return rows;
   let students = classroom.studentOnce;
   for (let i = 0; i < students.length; ++i) {
     let studEmail = students[i];
     let row = [];
-    row.push(<TableCell align="left">{studEmail}</TableCell>)
+    row.push(<TableCell align="left" key={`cel_${i}_0`}>{studEmail}</TableCell>)
     for (let j = 0; j< records.length; ++j) {
       let rec = records[j];
       let attendees = rec.students;
@@ -160,9 +158,9 @@ function parseRecords(classroom, records) {
         // item = <Badge color="secondary" badgeContent={"Absent"} />;
         item = <span style={absentStyle}>Absent</span>
       }
-      row.push(<TableCell align="left" key={`cell_${i}_${j}`}>{item}</TableCell>);
+      row.push(<TableCell align="left" key={`cell_${i}_${j + 1}`}>{item}</TableCell>);
     }
-    rows.push(row);
+    rows.push({key: `row_${i+1}`, value: row});
   }
   return rows;
 }
@@ -170,7 +168,7 @@ function parseRecords(classroom, records) {
 
 // functional component for classroomPage
 export default function InstructorClassroomPage(props){
-  const {userId, classroomId, loader, setLoader, setSnack} = props;
+  const {classroomId, loader, setLoader, setSnack} = props;
   const classes = useStyles();
   const [classroom, setClassroom] = useState(null);
   const [records, setRecords] = useState([]);
@@ -207,7 +205,7 @@ export default function InstructorClassroomPage(props){
     }).finally(()=>{
       setLoader({loading: false, text: ``});
     });
-  }, [classroomId]);
+  }, [classroomId, setLoader, setSnack]);
 
 
 
@@ -229,6 +227,7 @@ export default function InstructorClassroomPage(props){
         setSnack({visible: true, snackType: 'error', snackMessage: data.error});
       } else {
         setClassroom(data.classroom);
+        setRecords(data.records);
       }
     }).catch(err => {
       setSnack({visible: true, snackType: 'error', snackMessage: err});
@@ -250,6 +249,7 @@ export default function InstructorClassroomPage(props){
         setSnack({visible: true, snackType: 'error', snackMessage: data.error});
       } else {
         setClassroom(data.classroom);
+        setRecords(data.records);
       }
     }).catch(err => {
       setSnack({visible: true, snackType: 'error', snackMessage: err});
@@ -299,44 +299,46 @@ export default function InstructorClassroomPage(props){
       {/* displays the records */}
       <div style={{textAlign: 'center'}}><br/>Your attendance record for this classroom!</div>
       <TableContainer component={Paper}>
-      <Table className={classes.table} aria-label="custom pagination table">
+      <Table className={classes.table} aria-label="custom pagination table" id="attendanceRecordTable">
         <TableBody>
           {(rowsPerPage > 0
             ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
             : rows
           ).map((row) => (
-            <TableRow key={0}>
-              {row}
+            <TableRow key={row.key}>
+              {row.value}
             </TableRow>
           ))}
-
           {emptyRows > 0 && (
             <TableRow style={{ height: 53 * emptyRows }}>
               <TableCell colSpan={6} />
             </TableRow>
           )}
         </TableBody>
+      </Table>
+    </TableContainer>
+    <TableContainer>
+      <Table>
         <TableFooter>
+          <TableRow>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+              colSpan={3}
+              count={rows.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              SelectProps={{
+                inputProps: { 'aria-label': 'rows per page' },
+                native: true,
+              }}
+              onChangePage={handleChangePage}
+              onChangeRowsPerPage={handleChangeRowsPerPage}
+              ActionsComponent={TablePaginationActions}
+            />
+          </TableRow>
         </TableFooter>
       </Table>
     </TableContainer>
-    <div style={{textAlign: 'right'}}>
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-        colSpan={3}
-        count={rows.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        SelectProps={{
-          inputProps: { 'aria-label': 'rows per page' },
-          native: true,
-        }}
-        onChangePage={handleChangePage}
-        onChangeRowsPerPage={handleChangeRowsPerPage}
-        ActionsComponent={TablePaginationActions}
-      />
-    </div>
-
     </div>
   );
 }

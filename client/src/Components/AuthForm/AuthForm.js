@@ -134,7 +134,11 @@ export default function AuthForm(props) {
 
   };
 
-  return redirect || (
+  // check if redirection is available
+  if (redirect) return redirect;
+
+  // return the content   
+  return (
     <div id="authForm">
     <LoadingOverlay active={loader.loading} spinner text={loader.text}>
         <Container component="main" maxWidth="xs">
@@ -184,7 +188,7 @@ export default function AuthForm(props) {
                 </Button>
                 <Grid container>
                     <Grid item xs>
-                        {!register && <Link href="#" variant="body2">Forgot password?</Link>}
+                        {!register && <Link href="/forgot-password" variant="body2">Forgot password?</Link>}
                     </Grid>
                     <Grid item>
                         <Link href={register ? "/login" : "/register"} variant="body2">

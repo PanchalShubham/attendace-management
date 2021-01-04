@@ -1,12 +1,13 @@
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
-const SERVER_URL = 'http://localhost:8080';
+// const SERVER_URL = 'http://localhost:8080';
 const SECRET='e3483b2f6bc28d1f6c5253b1c8c860cbb7562341e75059c45108afdbe0fa92d0b152dc40ded35908921aa2e954f50830f157090b5a36319edef6901469f1afeb'
+axios.defaults.baseURL = 'http://localhost:8080';
 
 // registers the user
 export const registerUser = function(user) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/register", {...user})
+        axios.post("/register", {...user})
         .then(response => resolve(response)).catch(err => reject(err));
     });
 };
@@ -14,7 +15,7 @@ export const registerUser = function(user) {
 // login the user
 export const loginUser = function(user) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/login", {...user})
+        axios.post("/login", {...user})
         .then(response => resolve(response)).catch(err => reject(err));
     });
 }
@@ -22,22 +23,31 @@ export const loginUser = function(user) {
 // logout the user
 export const logoutUser = function(userId) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/logout", {userId})
+        axios.post("/logout", {userId})
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
 
+// forgot password
+export const forgotPassword = function(email, role) {
+    return new Promise(function(resolve, reject){
+        axios.post("/forgot-password", {email, role})
+            .then(response => resolve(response)).catch(err => reject(err));
+    });
+}
+
+// reset password
+export const resetPassword = function(tokenId, password) {
+    return new Promise(function(resolve, reject){
+        axios.post("/reset-password", {tokenId, password})
+            .then(response => resolve(response)).catch(err => reject(err));
+    });
+}
+
+// reads the details of the user with given Id
 export const readUser = function(userId) {
     return new Promise(function(resolve, reject){
-        axios.get(SERVER_URL + "/user/" + userId)
-            .then(response => resolve(response)).catch(err => reject(err));
-    });
-}
-
-// fetches the user
-export const fetchClassrooms = function(userId, role) {
-    return new Promise(function(resolve, reject){
-        axios.get(SERVER_URL + "/classrooms/" + role + "/" + userId)
+        axios.get("/user/" + userId)
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
@@ -45,7 +55,7 @@ export const fetchClassrooms = function(userId, role) {
 // fetches the details of the given classroom
 export const readClassroom = function(classroomId) {
     return new Promise(function(resolve, reject){
-        axios.get(SERVER_URL + "/classroom/" + classroomId)
+        axios.get("/classroom/" + classroomId)
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
@@ -53,7 +63,7 @@ export const readClassroom = function(classroomId) {
 // create classroom
 export const createClassroom = function(userId, className) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/create-classroom", {userId, className})
+        axios.post("/create-classroom", {userId, className})
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
@@ -61,7 +71,7 @@ export const createClassroom = function(userId, className) {
 // delete classroom
 export const deleteClassroom = function(classroomId) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/delete-classroom", {classroomId})
+        axios.post("/delete-classroom", {classroomId})
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
@@ -69,7 +79,7 @@ export const deleteClassroom = function(classroomId) {
 // join classroom
 export const joinClassroom = function(useremail, classCode) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/join-classroom", {useremail, classCode})
+        axios.post("/join-classroom", {useremail, classCode})
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
@@ -77,7 +87,7 @@ export const joinClassroom = function(useremail, classCode) {
 // leave classroom
 export const leaveClassroom = function(userEmail, classroomId) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/leave-classroom", {userEmail, classroomId})
+        axios.post("/leave-classroom", {userEmail, classroomId})
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
@@ -85,14 +95,14 @@ export const leaveClassroom = function(userEmail, classroomId) {
 // collect attendance
 export const collectAttendance = function(classroomId, attendanceId) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/collect-attendance", {classroomId, attendanceId})
+        axios.post("/collect-attendance", {classroomId, attendanceId})
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
 // stops collecting attendance
 export const stopCollectingAttendance = function(classroomId, attendanceId) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/stop-collecting", {classroomId, attendanceId})
+        axios.post("/stop-collecting", {classroomId, attendanceId})
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
@@ -100,7 +110,7 @@ export const stopCollectingAttendance = function(classroomId, attendanceId) {
 // mark-attendance
 export const markAttendance = function(userId, classroomId) {
     return new Promise(function(resolve, reject){
-        axios.post(SERVER_URL + "/mark-attendance", {userId, classroomId})
+        axios.post("/mark-attendance", {userId, classroomId})
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
@@ -109,16 +119,18 @@ export const markAttendance = function(userId, classroomId) {
 // attendance record
 export const attendanceRecord = function(classroomId) {
     return new Promise(function(resolve, reject){
-        axios.get(SERVER_URL + "/" + classroomId)
+        axios.get("/" + classroomId)
             .then(response => resolve(response)).catch(err => reject(err));
     });
 }
 
 
+// encrypts the given jsonObject
 export const encrypt = function(jsonObject) {
     return CryptoJS.AES.encrypt(JSON.stringify(jsonObject), SECRET);
 }
-export const decrypt = function(text) {
-    let bytes = CryptoJS.AES.decrypt(text, SECRET);
+// decrypt and parses the given cipherText
+export const decrypt = function(cipherText) {
+    let bytes = CryptoJS.AES.decrypt(cipherText, SECRET);
     return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
 }
