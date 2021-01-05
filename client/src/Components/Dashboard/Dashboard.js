@@ -149,21 +149,21 @@ export default function Dashboard() {
 
   // componentDidMount
   useEffect(function(){
-    let item = localStorage.getItem('_auth');
-    let userId = decrypt(item);
+    let item = localStorage.getItem('data');
+    let data = decrypt(item);
+    let {userId} = data;
     readUser(userId).then(response => {
       let data = response.data;
-      if (data.error) {
-        console.log(data.error);
-        setSnack({visible: true, snackType: 'error', })
-        localStorage.removeItem('_auth');
+      if (data.error) {        
+        setSnack({visible: true, snackType: 'error', snackMessage: data.error});
+        localStorage.removeItem('data');
         setRedirect(<Redirect to="/login" />)
       } else {
         setUser(data.user);        
       }
     }).catch(err => {
       console.log(err);
-      localStorage.removeItem('_auth');
+      localStorage.removeItem('data');
       setRedirect(<Redirect to="/login" />)
     });
   }, []);
@@ -177,7 +177,7 @@ export default function Dashboard() {
       if (data.error) {
         setSnack({visible: true, snackType: 'error', snackMessage: data.error});
       } else {
-        localStorage.removeItem('_auth');
+        localStorage.removeItem('data');
         setRedirect(<Redirect to="/login" />)
       }
     }).catch(err => {
@@ -189,9 +189,11 @@ export default function Dashboard() {
 
   // for add-classroom!
   const addClassroom = function(event) {
+    if (user === null)  return;
+    if (loader.loading) return;
+    let isTeacher = (user.role === 'teacher');
     let item = <AddClassroom showSnackBar={showSnackBar} 
-                    onAddClassroom={onAddClassroom} 
-                    role={user != null ? user.role : 'teacher'}/>
+                  isTeacher={isTeacher} onAddClassroom={onAddClassroom}/>
     setCurrentItem(item);
   }
   const onAddClassroom = function(value) {
@@ -216,7 +218,7 @@ export default function Dashboard() {
         setLoader({loading: false, text: ''});
       });
     } else {
-      joinClassroom(user.email, value).then(response => {
+      joinClassroom(user._id, value).then(response => {
         let data = response.data;
         console.log(data);
         if (data.error) {
@@ -242,7 +244,7 @@ export default function Dashboard() {
     setLoader({loading: true, text: `Please wait! I'm processing your request`});
     let {classroomId} = currentItem.props;
     if (user.role === 'teacher') {
-      deleteClassroom(classroomId).then(response => {
+      deleteClassroom(user._id, classroomId).then(response => {
         let data = response.data;
         if (data.error) {
           setSnack({visible: true, snackType: 'error', snackMessage: data.error});
@@ -257,7 +259,7 @@ export default function Dashboard() {
         setLoader({loading: false, text: ''})
       });  
     } else {
-      leaveClassroom(user.email, classroomId).then(response => {
+      leaveClassroom(user._id, classroomId).then(response => {
         let data = response.data;
         if (data.error) {
           setSnack({visible: true, snackType: 'error', snackMessage: data.error});

@@ -168,7 +168,7 @@ function parseRecords(classroom, records) {
 
 // functional component for classroomPage
 export default function InstructorClassroomPage(props){
-  const {classroomId, loader, setLoader, setSnack} = props;
+  const {classroomId, loader, setLoader, setSnack, user} = props;
   const classes = useStyles();
   const [classroom, setClassroom] = useState(null);
   const [records, setRecords] = useState([]);
@@ -191,7 +191,7 @@ export default function InstructorClassroomPage(props){
   // invokes whenever classroomName changes!
   useEffect(()=>{
     setLoader({loading: true, text: `Please wait! I'm fetching details for this classroom`});
-    readClassroom(classroomId).then(response=>{
+    readClassroom(user._id, classroomId).then(response=>{
       let data = response.data;
       if (data.error) {
         setTempMessage('Failed to load details of this classroom!');
@@ -205,7 +205,7 @@ export default function InstructorClassroomPage(props){
     }).finally(()=>{
       setLoader({loading: false, text: ``});
     });
-  }, [classroomId, setLoader, setSnack]);
+  }, [classroomId, setLoader, setSnack, user._id]);
 
 
 
@@ -221,7 +221,7 @@ export default function InstructorClassroomPage(props){
 
     // make server request here
     setLoader({loading: true, text: `Please wait! I'm processing your request`});
-    collectAttendance(classroom._id, attendanceId).then(response => {
+    collectAttendance(user._id, classroom._id, attendanceId).then(response => {
       let data = response.data;
       if (data.error) {
         setSnack({visible: true, snackType: 'error', snackMessage: data.error});
@@ -243,7 +243,7 @@ export default function InstructorClassroomPage(props){
     let attendanceId = classroom.collectingFor;
     // make server request here
     setLoader({loading: true, text: `Please wait! I'm processing your request`});
-    stopCollectingAttendance(classroomId, attendanceId).then(response => {
+    stopCollectingAttendance(user._id, classroomId, attendanceId).then(response => {
       let data = response.data;
       if (data.error) {
         setSnack({visible: true, snackType: 'error', snackMessage: data.error});

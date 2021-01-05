@@ -155,7 +155,7 @@ export default function StudentClassroomPage(props){
   // invokes whenever classroomName changes!
   useEffect(()=>{
     setLoader({loading: true, text: `Please wait! I'm fetching details for this classroom`});
-    readClassroom(classroomId).then(response=>{
+    readClassroom(user._id, classroomId).then(response=>{
       let data = response.data;
       if (data.error) {
         setTempMessage('Failed to load details of this classroom!');
@@ -169,7 +169,7 @@ export default function StudentClassroomPage(props){
     }).finally(()=>{
       setLoader({loading: false, text: ``});
     });
-  }, [classroomId, setLoader, setSnack]);
+  }, [classroomId, setLoader, setSnack, user._id]);
 
   // makes a request to mark attendance
   const onMarkAttendance = function() {

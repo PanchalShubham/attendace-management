@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 
@@ -13,6 +14,7 @@ router.post('/register', (req, res) => {
         user.email = email;
         user.role = role;
         user.password = user.encryptPassword(password);
+        user.loggedIn = false;
         user.save().then(() => {
             return res.status(200).json({});
         }).catch(err => {
@@ -35,7 +37,8 @@ router.post('/login', (req, res) => {
         user.loggedIn = true;
         user.save().then(()=>{
             user.password = null;
-            return res.status(200).json({user});    
+            const token = jwt.sign({userId: user._id}, process.env.JWT_SECRET, {expiresIn: '12h'});
+            return res.status(200).json({userId: user._id, token});    
         }).catch(err => {
             console.log(err);
             return res.status(500).json({error: err});
@@ -54,6 +57,7 @@ router.post('/logout', (req, res) => {
         if (!user)  return res.status(200).json({error: `Couldn't find your account!`});
         user.loggedIn = false;
         user.save().then(()=>{
+            res.clearCookie('token');
             return res.status(200).json({});
         }).catch(err => {
             console.log(err);

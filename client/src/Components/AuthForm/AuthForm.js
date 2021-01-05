@@ -4,7 +4,7 @@ import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Link from '@material-ui/core/Link';
+import {HashLink as Link} from 'react-router-hash-link';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
@@ -18,8 +18,6 @@ import Alert from '@material-ui/lab/Alert';
 import IconButton from '@material-ui/core/IconButton';
 import Collapse from '@material-ui/core/Collapse';
 import CloseIcon from '@material-ui/icons/Close';
-
-
 import {Redirect} from 'react-router-dom';
 import {registerUser, loginUser, encrypt} from '../../DAO/DataAccessObject';
 
@@ -120,7 +118,7 @@ export default function AuthForm(props) {
             if (data.error) {
                 setError(data.error);
             } else {
-                localStorage.setItem('_auth', encrypt(data.user._id));
+                localStorage.setItem('data', encrypt(data));
                 setSuccess(`You are successfully logged in!`);
                 setRedirect(<Redirect to="/dashboard" />)
             }
@@ -188,15 +186,15 @@ export default function AuthForm(props) {
                 </Button>
                 <Grid container>
                     <Grid item xs>
-                        {!register && <Link href="/forgot-password" variant="body2">Forgot password?</Link>}
+                        {!register && <Link to="/forgot-password" variant="body2">Forgot password?</Link>}
                     </Grid>
                     <Grid item>
-                        <Link href={register ? "/login" : "/register"} variant="body2">
+                        <Link to={register ? "/login" : "/register"} variant="body2">
                             {register ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
                         </Link>
                     </Grid>
                 </Grid>
-                <div style={{"height": "10px"}} />
+                <d style={{"height": "10px"}} />
             </form>
         </div>
         </Container>  

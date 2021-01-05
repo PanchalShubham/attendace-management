@@ -16,7 +16,7 @@ import Alert from '@material-ui/lab/Alert';
 import IconButton from '@material-ui/core/IconButton';
 import Collapse from '@material-ui/core/Collapse';
 import CloseIcon from '@material-ui/icons/Close';
-import Link from '@material-ui/core/Link';
+import {HashLink as Link} from 'react-router-hash-link';
 import Grid from '@material-ui/core/Grid';
 import {forgotPassword, resetPassword} from '../../DAO/DataAccessObject';
 
@@ -163,10 +163,10 @@ export default function ForgotPassword(props) {
                 {!reset && 
                   <Grid container>
                     <Grid item xs>
-                        <Link href="/login" variant="body2">Go to Sign In</Link>
+                        <Link to="/login" variant="body2">Go to Sign In</Link>
                     </Grid>
                     <Grid item xs>
-                        <Link href="/login" variant="body2">Go to Sign Up</Link>
+                        <Link to="/login" variant="body2">Go to Sign Up</Link>
                     </Grid>
                   </Grid>}
             </form>

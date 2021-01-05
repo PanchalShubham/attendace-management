@@ -36,9 +36,8 @@ const useStyles = makeStyles((theme) => ({
 
 // functional component
 export default function AddClassroom(props) {
-  const {showSnackBar, onAddClassroom, role} = props;
+  const {showSnackBar, onAddClassroom, isTeacher} = props;
   const classes = useStyles();
-  let isTeacher = (role === 'teacher');
   let fieldName = (isTeacher ? 'classname': 'classcode');
 
   // handler for form-submit-operation

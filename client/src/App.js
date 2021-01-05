@@ -1,10 +1,17 @@
 import React from 'react';
-import {BrowserRouter, Route, Switch, Redirect} from 'react-router-dom';
+import {HashRouter, Route, Switch, Redirect} from 'react-router-dom';
 import Homepage from './Components/Homepage/Homepage';
 import AuthForm from './Components/AuthForm/AuthForm';
 import ForgotPassword from './Components/ForgotPassword/ForgotPassword';
 import Dashboard from './Components/Dashboard/Dashboard';
+import NotFound from './Components/NotFound/NotFound';
 import './App.css';
+
+// checks if user has a token
+function hasToken() {
+  // check if local-storage contains token
+  return (localStorage.getItem('data') != null);
+}
 
 // public route - only available to non-authenticated users
 const PublicRoute = ({component : Component, ...rest}) => {
@@ -12,7 +19,7 @@ const PublicRoute = ({component : Component, ...rest}) => {
   <Route {...rest} render={
     function(props){
       let merged = {...props, ...rest};
-      return ( localStorage.getItem('_auth') == null ? 
+      return ( !hasToken() ? 
         <Component {...merged} /> : 
         <Redirect to={{pathname: '/dashboard', state: {from: props.location}}} />
       );
@@ -26,7 +33,7 @@ const PrivateRoute = ({component : Component, ...rest}) => {
   <Route {...rest} render={
     function(props){
       let merged = {...props, ...rest};
-      return ( localStorage.getItem('_auth') != null ? 
+      return ( hasToken() ? 
         <Component {...merged} /> : 
         <Redirect to={{pathname: '/login', state: {from: props.location}}} />
       );
@@ -34,10 +41,11 @@ const PrivateRoute = ({component : Component, ...rest}) => {
   }/>);
 };
 
+// functional component
 function App() {
   return (
     <div id="baseDiv">
-      <BrowserRouter>
+      <HashRouter basename="/">
         <Switch>
           <PublicRoute exact path="/" component={Homepage} />
           <PublicRoute exact path="/login" component={AuthForm} register={false}/>
@@ -45,8 +53,9 @@ function App() {
           <PublicRoute exact path="/forgot-password" component={ForgotPassword} reset={false}/>
           <PublicRoute exact path="/reset-password/:tokenId" component={ForgotPassword} reset={true}/>
           <PrivateRoute exact path="/dashboard" component={Dashboard} />
+          <Route path="/" component={NotFound} />
         </Switch>
-      </BrowserRouter>
+      </HashRouter>
     </div>
   );
 };

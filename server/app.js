@@ -7,7 +7,7 @@ const MongoStore = require('connect-mongo')(session);
 const mongoose = require('mongoose');
 const cors = require('cors');
 
-// import roters
+// import routers
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auth');
 const addDeleteClassroomRouter = require('./routes/add_delete_classroom');
@@ -27,25 +27,22 @@ mongoose.connect(process.env.DB_URL, {
 });
 
 // configurations
-var app = express();
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+const app = express();
 app.use(express.json({limit: '10mb'}));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-// setup express-session
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: true,
-  saveUninitialized: true,
-  store: new MongoStore({
-      mongooseConnection: mongoose.connection
-  }),
-  cookie: {maxAge: 180 * 60 * 1000}
-}));  
 app.use(cors());
+// setup express-session
+// app.use(session({
+//   secret: process.env.SESSION_SECRET,
+//   resave: true,
+//   saveUninitialized: true,
+//   store: new MongoStore({
+//       mongooseConnection: mongoose.connection
+//   }),
+//   cookie: {maxAge: 180 * 60 * 1000}
+// }));  
+
 
 // define routers
 app.use('/', indexRouter);

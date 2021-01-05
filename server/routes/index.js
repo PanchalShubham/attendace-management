@@ -7,6 +7,7 @@ const User = require('../models/User');
 const Classroom = require('../models/Classroom');
 const AttendanceRecord = require('../models/AttendanceRecord');
 const Token = require('../models/Token');
+const isAuthenticated = require('./auth_middleware');
 
 // edit the details of  the user before sending!
 function editBeforeSend(user, classrooms) {
@@ -47,7 +48,7 @@ router.get('/', (req, res) => {
 
 
 // fetches the user with given id
-router.get('/user/:userId', (req, res) => {
+router.post('/user/:userId', isAuthenticated, (req, res) => {
     let {userId} = req.params;
     User.findOne({_id: userId}).then(user => {
         if (!user)  return res.status(200).json({error: `Failed to find your account!`});
@@ -67,8 +68,8 @@ router.get('/user/:userId', (req, res) => {
 
 
 // fetch the details of given classroom
-router.get('/classroom/:classroomId', (req, res) => {
-    let {classroomId} = req.params;
+router.post('/classroom/:classroomId', isAuthenticated, (req, res) => {
+    let {userId, classroomId} = req.params;
     Classroom.findOne({_id: classroomId}).then(classroom => {
         if (!classroom) return res.status(200).json({error: `Failed to find that classroom!`});
         AttendanceRecord.find({classroomId}).then(records => {

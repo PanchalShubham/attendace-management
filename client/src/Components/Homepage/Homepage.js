@@ -1,5 +1,6 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { makeStyles } from '@material-ui/core';
+import {Redirect} from 'react-router-dom'; 
 import Button from '@material-ui/core/Button';
 import BrandIcon from '../../resources/images/brand.png';
 const useStyles = makeStyles(theme => ({
@@ -36,6 +37,8 @@ const useStyles = makeStyles(theme => ({
 
 function Homepage(props) {
     const classes = useStyles();
+    const [redirect, setRedirect] = useState(null);
+    if (redirect)   return redirect;
     return (
         <div className={classes.homepage}>
             <h1 className={classes.header}>Attendance Management System</h1>
@@ -56,9 +59,11 @@ function Homepage(props) {
                         Sounds exciting? <br/>
                         Click on the button below to get started!
                     </p>
-                    <Button className={classes.button} variant="contained" color="primary" href="/login">Sign In</Button>
+                    <Button className={classes.button} variant="contained" 
+                        color="primary" onClick={event => setRedirect(<Redirect to="/login" />)}>Sign In</Button>
                     OR
-                    <Button className={classes.button} variant="contained" color="primary" href="/register">Sign Up</Button>
+                    <Button className={classes.button} variant="contained" 
+                        color="primary" onClick={event => setRedirect(<Redirect to="/register" />)}>Sign Up</Button>
                 </div>
             </div>
         </div>
